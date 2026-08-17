@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/parametric-building-model.schema.json",
+  "title": "Parametric Building Model extracted from architectural drawings",
+  "type": "object",
+  "required": ["metadata", "evidence", "assumptions", "missing_information"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["project_name", "units", "source_sheets"],
+      "properties": {
+        "project_name": {"type": "string"},
+        "model_version": {"type": "string", "default": "0.1"},
+        "units": {"type": "string", "enum": ["m", "mm", "cm", "ft", "in"]},
+        "coordinate_system": {
+          "type": "object",
+          "properties": {
+            "origin": {"type": "string"},
+            "x_axis": {"type": "string"},
+            "y_axis": {"type": "string"},
+            "z_axis": {"type": "string", "default": "up"}
+          },
+          "additionalProperties": true
+        },
+        "source_sheets": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/source_sheet"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "levels": {"type": "array", "items": {"$ref": "#/$defs/level"}},
+    "grids": {"type": "array", "items": {"$ref": "#/$defs/grid_axis"}},
+    "spaces": {"type": "array", "items": {"$ref": "#/$defs/space"}},
+    "walls": {"type": "array", "items": {"$ref": "#/$defs/wall"}},
+    "openings": {"type": "array", "items": {"$ref": "#/$defs/opening"}},
+    "slabs": {"type": "array", "items": {"$ref": "#/$defs/slab"}},
+    "stairs": {"type": "array", "items": {"$ref": "#/$defs/stair"}},
+    "roofs": {"type": "array", "items": {"$ref": "#/$defs/roof"}},
+    "site": {"type": "object", "additionalProperties": true},
+    "constraints": {"type": "array", "items": {"$ref": "#/$defs/constraint"}},
+    "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
+    "assumptions": {"type": "array", "items": {"$ref": "#/$defs/assumption"}},
+    "conflicts": {"type": "array", "items": {"$ref": "#/$defs/conflict"}},
+    "missing_information": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"},
+    "confidence": {"type": "string", "enum": ["high", "medium", "low", "unknown"]},
+    "point2d": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+    "point3d": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+    "polyline2d": {"type": "array", "items": {"$ref": "#/$defs/point2d"}, "minItems": 2},
+    "polygon2d": {"type": "array", "items": {"$ref": "#/$defs/point2d"}, "minItems": 3},
+    "source_sheet": {
+      "type": "object",
+      "required": ["id", "title", "view_type"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "title": {"type": "string"},
+        "file": {"type": "string"},
+        "drawing_number": {"type": "string"},
+        "revision": {"type": "string"},
+        "view_type": {"type": "string", "enum": ["floor_plan", "section", "elevation", "site_plan", "detail", "schedule", "unknown"]},
+        "scale": {"type": "string"},
+        "level": {"type": "string"},
+        "direction": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "evidence_ref": {
+      "type": "object",
+      "required": ["evidence_id", "confidence"],
+      "properties": {
+        "evidence_id": {"$ref": "#/$defs/id"},
+        "confidence": {"$ref": "#/$defs/confidence"},
+        "value_status": {"type": "string", "enum": ["observed", "inferred", "assumed", "conflicting", "unknown"]}
+      },
+      "additionalProperties": true
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["id", "sheet_id", "kind", "confidence"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "sheet_id": {"$ref": "#/$defs/id"},
+        "kind": {"type": "string", "enum": ["dimension_text", "label", "symbol", "linework", "hatch", "scaled_measurement", "cross_view_match", "assumption", "other"]},
+        "view_type": {"type": "string"},
+        "page_bbox": {"type": "array", "items": {"type": "number"}, "minItems": 4, "maxItems": 4},
+        "text": {"type": "string"},
+        "confidence": {"$ref": "#/$defs/confidence"},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "level": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "elevation": {"type": ["number", "null"]},
+        "floor_to_floor_height": {"type": ["number", "null"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "grid_axis": {
+      "type": "object",
+      "required": ["id", "name", "line"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "line": {"$ref": "#/$defs/polyline2d"},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "space": {
+      "type": "object",
+      "required": ["id", "level_id", "boundary"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "level_id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string"},
+        "number": {"type": "string"},
+        "use": {"type": "string"},
+        "boundary": {"$ref": "#/$defs/polygon2d"},
+        "area": {"type": ["number", "null"]},
+        "adjacent_space_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "wall": {
+      "type": "object",
+      "required": ["id", "level_id", "baseline"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "level_id": {"$ref": "#/$defs/id"},
+        "baseline": {"$ref": "#/$defs/polyline2d"},
+        "representation": {"type": "string", "enum": ["centerline", "inner_face", "outer_face", "unknown"]},
+        "thickness": {"type": ["number", "null"]},
+        "height": {"type": ["number", "null"]},
+        "material": {"type": ["string", "null"]},
+        "is_load_bearing": {"type": ["boolean", "null"]},
+        "status": {"type": "string", "enum": ["existing", "new", "demolished", "unknown"], "default": "unknown"},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "opening": {
+      "type": "object",
+      "required": ["id", "host_wall_id", "kind"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "host_wall_id": {"$ref": "#/$defs/id"},
+        "kind": {"type": "string", "enum": ["door", "window", "opening", "shaft", "unknown"]},
+        "offset_along_wall": {"type": ["number", "null"]},
+        "width": {"type": ["number", "null"]},
+        "height": {"type": ["number", "null"]},
+        "sill_height": {"type": ["number", "null"]},
+        "head_height": {"type": ["number", "null"]},
+        "swing": {"type": ["string", "null"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "slab": {
+      "type": "object",
+      "required": ["id", "level_id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "level_id": {"$ref": "#/$defs/id"},
+        "boundary": {"$ref": "#/$defs/polygon2d"},
+        "thickness": {"type": ["number", "null"]},
+        "top_elevation": {"type": ["number", "null"]},
+        "bottom_elevation": {"type": ["number", "null"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "stair": {
+      "type": "object",
+      "required": ["id", "from_level_id", "to_level_id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "from_level_id": {"$ref": "#/$defs/id"},
+        "to_level_id": {"$ref": "#/$defs/id"},
+        "footprint": {"$ref": "#/$defs/polygon2d"},
+        "rise": {"type": ["number", "null"]},
+        "tread": {"type": ["number", "null"]},
+        "riser_count": {"type": ["integer", "null"]},
+        "width": {"type": ["number", "null"]},
+        "direction": {"type": ["string", "null"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "roof": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"type": "string"},
+        "boundary": {"$ref": "#/$defs/polygon2d"},
+        "ridge_line": {"$ref": "#/$defs/polyline2d"},
+        "eave_elevation": {"type": ["number", "null"]},
+        "ridge_elevation": {"type": ["number", "null"]},
+        "slope": {"type": ["number", "null"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "constraint": {
+      "type": "object",
+      "required": ["id", "kind", "element_ids"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"type": "string", "enum": ["parallel", "perpendicular", "aligned", "equal_length", "hosted_by", "same_level", "vertical_alignment", "dimension_chain", "other"]},
+        "element_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "value": {},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_ref"}}
+      },
+      "additionalProperties": true
+    },
+    "assumption": {
+      "type": "object",
+      "required": ["id", "statement", "reason"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "statement": {"type": "string"},
+        "reason": {"type": "string"},
+        "affected_element_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "confidence": {"$ref": "#/$defs/confidence"}
+      },
+      "additionalProperties": true
+    },
+    "conflict": {
+      "type": "object",
+      "required": ["id", "description"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "description": {"type": "string"},
+        "element_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "evidence_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "resolution": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  }
+}
