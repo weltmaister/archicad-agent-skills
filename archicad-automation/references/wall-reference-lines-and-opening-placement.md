@@ -48,7 +48,8 @@ In a live case this produced exactly the observed symptoms: windows sometimes re
 Before placing doors/windows or dimensions:
 
 1. Build a source-derived **wall reference-line graph**, not only wall body polygons.
-   - For exterior walls, choose and record one convention: e.g. reference line on the exterior face with a consistent loop direction, or centerline with explicit inward normal/body side. Do not mix conventions.
+   - **Reference line by element class (recommended rule):** exterior walls → reference line on the CONTINUOUS outer face, body inward; interior walls → centered. Never place everything centered — at thickness jumps of the building envelope the room ring tears open otherwise. Record the convention and do not mix it within a class.
+   - **Courtyard-facing walls are exterior walls.** An outside-space detection that only tests the region beyond the building outline misses them — the courtyard must be counted as outside space.
    - For every corner, reference-line endpoints must meet exactly when that is the selected convention; do not rely on body-overlap cleanup.
    - For T-junctions, the interior wall reference-line endpoint must meet the host wall reference line or intentionally intersect it.
 2. Create/modify walls from that graph, including thickness, offset/reference-line convention, building material, and layer intersection group.
@@ -56,6 +57,7 @@ Before placing doors/windows or dimensions:
    - bounding boxes are not enough;
    - use wall detail/reference-line readback when available;
    - otherwise reconstruct expected reference lines from the payload you used and publish/check reference-line-visible or plan-overlay evidence.
+   - **Room-ring check:** with few exceptions, the wall reference lines around each room must form a CLOSED polygon. Verify by rasterizing the reference lines and running a connected-component analysis: every room must be its own finite region, and none may connect to the outside region. A room region that leaks to the outside marks a broken junction — fix it before openings/dimensions.
 4. Place windows/doors only after the wall graph is correct.
    - For straight walls, derive global opening center from `wallBeg + centerOffset * wallDir`.
    - Keep `centerOffset`, `width`, `fixPoint`, and host wall direction together as one invariant.

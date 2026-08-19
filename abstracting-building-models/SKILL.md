@@ -34,6 +34,18 @@ If only one drawing is available, still extract a partial model and label missin
 
 2. **Calibrate geometry**
    - Use written dimensions first, then scale bar/title scale, then known object sizes.
+   - **Dimension chains outrank drawn geometry — always.** Point/pixel coordinates of a PDF are
+     never as accurate as the inscribed dimension text. Where a chain states a value (two
+     decimals, or millimetres as a superscript), the model must hit exactly that value — not the
+     result measured from coordinates. Procedure: (1) extract every dimension chain and **assign
+     each chain to the element it dimensions** — that assignment is the real work, not the
+     measuring; (2) accumulate the chain texts into an exact control grid; (3) place wall axes,
+     edges, and openings on that grid — measured geometry serves only to match chain to element,
+     never as the source of a value; (4) only where no chain exists does measured geometry
+     govern — then rounded per "Snap to buildable values" (step 7) and flagged
+     `derived-from-geometry`. (Typical failures without this rule: a parking grid measured as
+     8.098/8.102/8.098 where the chain says 8.10 throughout; wall thicknesses measured as
+     0.239/0.245/0.254 where the chain says 25 cm.)
    - If the plan carries NO dimensions and no scale bar, anchor the scale on one recognizable
      standard component (a double garage is ~6.0 m wide, a door leaf ~0.9 m, a parking bay ~2.5 m),
      pixel-measure everything from that anchor, and validate the result against catalogue standards
@@ -63,12 +75,32 @@ If only one drawing is available, still extract a partial model and label missin
 6. **Reconcile all views**
    - Match elements across drawings by coordinates, dimensions, labels, axes, and adjacency.
    - Resolve conflicts by priority: explicit dimension > high-scale detail > section/elevation cross-check > scaled inference.
-   - Record conflicts rather than silently averaging incompatible dimensions.
+   - **If an overall dimension contradicts the sum of its segment dimensions (or two chains
+     disagree): stop for that region.** Do not decide yourself, do not average, do not silently
+     prefer one chain — name the conflict with both values and the difference, and let the user
+     decide before modelling the affected region.
 
 7. **Parameterize**
    - Convert raw lines into objects with parameters and constraints: wall length/thickness, opening offsets, room polygons, level heights, roof slopes, grid spacing.
    - Preserve constraints: parallel/perpendicular, alignment to axes, equal spacing, host relationships, storey membership.
    - Separate `observed`, `inferred`, and `assumed` values.
+   - **Snap to buildable values — no chain means round to 5 mm, system-wise.** Architecture is
+     never drawn finer than half a centimetre: model values like 0.919 / 8.098 / 0.239 are
+     categorically invalid. Where a value must be derived from geometry, round to 5 mm — but the
+     DIRECTION of rounding is a system decision, not arithmetic: (1) detect the system first
+     (axis grid, recurring nominal dimension, module order), then round; (2) round GROUP-wise,
+     not element-wise — values scattering around one target are all pulled to that target, not
+     each to its own nearest 5 mm multiple; (3) a dimension that recurs identically is the
+     system dimension — deviating single values are measurement noise or explainable specials
+     (edge bays, junctions) and must be justified as such. Worked case: measured axis spacings
+     8.473 / 8.352 / 8.348 / 8.348 / 8.478 with a chain giving a clear measure of 8.10 and
+     25 cm walls → axis dimension 8.35, occurring three times → all inner bays snap to 8.35 and
+     the edge bays are explained by the exterior-wall junction; element-wise rounding
+     (8.475/8.35/8.35/8.35/8.48) would have destroyed the system.
+   - **Before rounding, test for a masonry grid.** An existing building often sits in the
+     nominal module of its masonry (DIN 4172 / brick formats); if so, wall thicknesses AND
+     length/axis dimensions snap to the masonry dimensions, not to a neutral 5 mm grid — and
+     off-grid walls date later alterations. Load `references/masonry-grid-calibration.md`.
 
 8. **Validate**
    - Dimensions close: outer dimensions equal sums of segments within tolerance.
