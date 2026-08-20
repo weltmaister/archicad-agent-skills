@@ -51,6 +51,11 @@ If only one drawing is available, still extract a partial model and label missin
      pixel-measure everything from that anchor, and validate the result against catalogue standards
      (room areas, door/window widths) and overall rectangular closure before trusting it.
    - Establish coordinate system: origin, x/y axes, unit in meters or millimeters.
+   - **Local origin, never world coordinates.** When a source plan carries geodetic/survey
+     coordinates, calibrate to a local origin (building corner or survey marker near 0,0,0)
+     and record the world offset in evidence — real-world coordinate magnitudes cause
+     precision failures downstream; georeferencing belongs in the survey point, not the
+     geometry.
    - Keep original page coordinates in evidence so extraction can be checked later.
 
 3. **Read drawing conventions**
@@ -61,6 +66,12 @@ If only one drawing is available, still extract a partial model and label missin
 
 4. **Extract plan geometry**
    - Storeys/levels: names, elevations, floor-to-floor heights, finished floor levels.
+   - **Fix the storey datum convention BEFORE extracting heights:** does +/-0.00 mean top of
+     finished floor (German: OKFF) or top of structural slab (OKRD, typically -0.15 below the
+     finished floor for the finish build-up)? And does each structural slab belong to the
+     storey below it (architectural view) or above it (structural view)? Every level note and
+     section dimension in the source references one of these conventions — mixing them shifts
+     all heights by the build-up thickness. Record the chosen convention in `metadata`.
    - Spaces: room polygons, names, numbers, areas, usage, adjacency.
    - Walls: centerline or face geometry, thickness, height, construction/material if known.
    - Openings: doors/windows attach to host wall with width, height, sill/threshold, swing/opening direction.
@@ -84,6 +95,9 @@ If only one drawing is available, still extract a partial model and label missin
    - Convert raw lines into objects with parameters and constraints: wall length/thickness, opening offsets, room polygons, level heights, roof slopes, grid spacing.
    - Preserve constraints: parallel/perpendicular, alignment to axes, equal spacing, host relationships, storey membership.
    - Separate `observed`, `inferred`, and `assumed` values.
+   - **Existing buildings: every element gets renovation status `existing`;** planned
+     interventions get `new` or `demolition`. One model with filtered views — never separate
+     files per state, and never renovation status as a design-variant system.
    - **Snap to buildable values — no chain means round to 5 mm, system-wise.** Architecture is
      never drawn finer than half a centimetre: model values like 0.919 / 8.098 / 0.239 are
      categorically invalid. Where a value must be derived from geometry, round to 5 mm — but the
@@ -105,6 +119,11 @@ If only one drawing is available, still extract a partial model and label missin
 8. **Validate**
    - Dimensions close: outer dimensions equal sums of segments within tolerance.
    - Spaces are enclosed; walls hosting openings exist; stairs connect valid levels.
+   - **Zone-area cross-check:** where the source plan prints room areas, compare each
+     extracted room polygon's area against the printed value (typical tolerance 1-2%).
+     A mismatch marks a misplaced wall or a hole in the room's wall loop; downstream, an
+     Archicad zone that cannot auto-detect its boundary is the same signal — fix topology,
+     never hand-draw the zone polygon.
    - Section heights are consistent with storey elevations.
    - Report unresolved ambiguities and request missing sheets only when needed.
    - If JSON is written to disk, validate it with:
@@ -137,6 +156,9 @@ Include at least:
 - Do not collapse existing/new/demolished elements when renovation drawings use colors or line styles.
 - Do not ignore title-block scale changes; details often have different scales than the main plan.
 - Do not output a single clean model without uncertainties; downstream automation needs evidence and conflict records.
+- German term traps when reading plans or requests: "Ebene" is an Archicad Layer (NOT a
+  storey — "Geschoss" is the storey), "Freiflaeche" is the Mesh/terrain tool, "Fassade" is
+  Curtain Wall, "Schraffur" is Fill. Terrain is always a Mesh, never a slab or morph.
 - For measured but low-resolution PDFs, extract both PDF text and a rendered image. Use explicit dimension text for global calibration, then vision/pixel interpretation only for room partitioning, openings, and ambiguous details. Save a machine-readable intermediate JSON so Archicad automation can continue even if the tool connection fails.
 - For measured-plan-to-Archicad work, do not output only wall body polygons/BBoxes and assume the Archicad layer can infer clean native walls. Include the intended wall reference line, wall direction, reference-line position (outside/inside/center or explicit body side/inward normal), thickness, and join endpoints. Door/window host side and centerOffset are meaningful only relative to that reference-line convention; omitting it causes alternating inside/outside openings and unclean wall junctions downstream.
 

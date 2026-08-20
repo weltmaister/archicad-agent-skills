@@ -90,6 +90,7 @@ check each item for an `elementId` vs. an `error` object.
 | `references/tapir-full-command-catalog.md` | Complete command list with input/response schemas. Breadth; anything not in the verified file. |
 | `references/tapir-http-direct-protocol.md` | Protocol details, error semantics, command family overview. |
 | `references/wall-reference-lines-and-opening-placement.md` | Wall reference-line direction rules, clean junctions, opening placement. |
+| `references/bim-element-modeling-rules.md` | Office-grade BIM semantics: mandatory classification triple, tool-choice matrix, per-storey walls, slab vs. build-up, roofs, openings/IfcOpenings, junction gates, zone QA. |
 | `references/opening-side-triad-oside-reflected-refside.md` | Door/window side and handing control (`oSide`, `reflected`, `refSide`). |
 | `references/opening-witness-point-derivation.md` + `scripts/opening_witness_points.py` | Deriving global opening edge coordinates from owner-wall geometry. |
 | `references/publish-and-dimension-verification.md` | Verifying dimensions and published output after model edits. |
