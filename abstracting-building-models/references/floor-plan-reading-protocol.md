@@ -58,6 +58,37 @@ For every source plan, inventory these classes explicitly:
 - Wall gap plus swing arc / sliding symbol / door leaf.
 - Store host wall, rough opening width, swing side/handing, and whether it is exterior/interior/terrace door.
 
+**When the source draws no door symbols at all** (common in as-built and permit plans:
+the wall is simply interrupted, no swing arc, no threshold lines) — verify that absence
+instead of assuming it: render the door/window layers alone (vector PDF: OCG layers) and
+count ink. Then apply:
+
+- **Width rule (binding): EVERY wall interruption whose width could be a door IS a door.**
+  Concretely: gap width <= 1.45 m → door, with **no** topological test. A topology test
+  ("does the gap connect two distinct enclosed cells?") is a useful *extra* filter for wide
+  passages but must never gate door-width gaps — it silently drops real doors wherever the
+  neighbouring rooms are already connected elsewhere.
+- **Cross-family gaps are invisible to a per-wall scan.** If the two walls flanking the gap
+  have different thickness or a different face pair, they are different "families" and the
+  gap never appears as a gap of one family. Needs a second pass: same orientation, band
+  overlap >= 0.55 x min thickness, axial gap 0.5-1.6 m, material coverage of the gap
+  rectangle < 30 %, and no opening already there → bridge the **thinner** wall across the
+  gap and host the door in it.
+- **Distinguish three causes before calling a gap an opening:** (a) another wall of the same
+  face pair occupies it → thickness change, split the walls, no opening; (b) the gap
+  rectangle is >= 90 % filled with wall material → crossing wall, bridge it, no opening;
+  (c) empty → opening.
+- **Clip every opening against crossing walls.** After wall ends are extended to neighbour
+  reference lines, crossing walls reach into openings. Subtract all crossing walls' bands
+  from each opening's axial interval and keep the free sub-intervals >= 0.30 m as separate
+  openings (live: one 3.395 m "passage" split into 1.654 + 1.180 m, removing 6
+  openings-inside-intersections).
+- **Consequence worth stating explicitly:** unmodelled doors are holes in the wall ring, and
+  the wall ring is what Archicad's automatic zone detection needs (live: modelling the
+  interruptions as doors took `CreateZones` auto-detection from 18 of 24 rooms to 24 of 24).
+  A room that will not auto-detect is a topology defect — fix the door, never hand-draw the
+  zone polygon.
+
 ### Windows
 - Thin rectangles/double lines within walls.
 - Store host wall, rough opening width, sill height if visible, and type if symbol indicates it.

@@ -156,6 +156,8 @@ Include at least:
 - Do not collapse existing/new/demolished elements when renovation drawings use colors or line styles.
 - Do not ignore title-block scale changes; details often have different scales than the main plan.
 - Do not output a single clean model without uncertainties; downstream automation needs evidence and conflict records.
+- PyMuPDF: `doc.set_layer(..., off=[...])` does NOT switch OCG layers — load
+  `references/vector-pdf-layer-extraction.md` before any vector-PDF extraction.
 - German term traps when reading plans or requests: "Ebene" is an Archicad Layer (NOT a
   storey — "Geschoss" is the storey), "Freiflaeche" is the Mesh/terrain tool, "Fassade" is
   Curtain Wall, "Schraffur" is Fill. Terrain is always a Mesh, never a slab or morph.
@@ -199,6 +201,8 @@ When this deeper checklist is needed, load `references/measured-plan-intermediat
 For measured-plan reconstruction that must generalize beyond clean vector PDFs, load the dimension-chain + element-recognition handoff note: `references/dimension-chain-element-parameter-handoff.md`.
 
 For any case where the produced geometry looks like lines or where the user says the plan has not been understood, load the stricter floor-plan reading protocol: `references/floor-plan-reading-protocol.md`.
+
+For vector CAD-exported PDFs (OCG layers, exact fill-path geometry, opening detection from white fills, layer-name mining), load BEFORE any extraction: `references/vector-pdf-layer-extraction.md`.
 
 Important correction: PDF vector tracing or pixel vectorization may be used as diagnostic/proof evidence, but the primary reusable model must be constructed from dimension-chain grouping plus element classification: exterior walls, interior walls, columns, windows, doors, objects, stairs, rooms, and the dimension chain(s) that justify each element. If the element classes and their governing dimension chains are not represented, stop before writing more Archicad geometry.
 

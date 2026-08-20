@@ -20,6 +20,25 @@ then treat this as a **host UI-state block**, not as a geometry/schema bug.
 
 Do not interpret door/window/publisher failures observed during the modal state as evidence about defaults or payload shape.
 
+## SaveProject fails from the 3D window
+
+`SaveProject` returns `succeeded:true` at call level with an item error
+`-2130312308 "Failed to save the project."` whenever the **3D window** is the active
+window. The project is not written; the file mtime does not move.
+
+Live-verified 2026-08-20 (AC28, current main build): two consecutive `SaveProject` calls
+failed with the 3D window active (`GetCurrentWindowType` → `3DModel`); after
+`ChangeWindow {"windowType":"FloorPlan","storyIndex":-1}` the very next `SaveProject`
+succeeded and the `.pln` mtime advanced.
+
+**Discipline:** read `GetCurrentWindowType` before every save; if it is not a floor plan,
+switch, save, and switch back to whatever the user was looking at. Treat a failed save the
+same as a modal-dialog block: never keep mutating on top of an unsaved model.
+
+**Schema note:** the `ChangeWindow.windowType` enum value for the 3D window is exactly
+**`3DModel`**. `Model3D`, `3D`, `ThreeD`, `Perspective`, `Axonometry` are all rejected with
+`-2130313112 "Invalid parameter: windowType."`
+
 ## Reopen-the-real-project recovery step
 
 If the session looks structurally wrong after restart (for example missing libraries, dead publisher assumptions, stale layout/view IDs), use this sequence:

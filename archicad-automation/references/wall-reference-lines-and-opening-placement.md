@@ -52,6 +52,25 @@ Before placing doors/windows or dimensions:
    - **Courtyard-facing walls are exterior walls.** An outside-space detection that only tests the region beyond the building outline misses them — the courtyard must be counted as outside space.
    - For every corner, reference-line endpoints must meet exactly when that is the selected convention; do not rely on body-overlap cleanup.
    - For T-junctions, the interior wall reference-line endpoint must meet the host wall reference line or intentionally intersect it.
+   - **How to DETECT an unmet reference line (two traps that hide every outer corner).**
+     For a wall `p` whose end lies at coordinate `v`, and a perpendicular wall `q`:
+     1. **Catch radius = the FULL thickness of `q`, not a small tolerance.** `q`'s reference
+        line can be up to `thickness(q)` away from `v` (0.77 m in a masonry basement). A
+        0.30 m tolerance silently skips every thicker junction — live it left 42 wall ends
+        unconnected while reporting zero violations.
+     2. **At an L-corner the two walls only TOUCH: their band overlap is exactly 0.**
+        `p`'s band `[p.a,p.b]` and `q`'s axial extent `[q.t0,q.t1]` share a single point, so
+        any candidate test written as `overlap > 0` discards **all** outer corners. Use
+        `min(q.t1,p.b) - max(q.t0,p.a) > -0.03`.
+     Both fixed together (live 2026-08-20): corrected wall ends 56 → 116, open violations 42 → 0.
+   - **Ambiguity is normal, not a defect:** an end can lie inside the band of two different
+     crossing walls with different reference lines. Both junctions are legitimate; pick the
+     one whose band contains `v` (prefer containment over proximity) and do not report the
+     other as an open violation.
+   - **Order matters:** extending wall ends changes wall extents, so re-run the collinear-overlap
+     check and re-derive every opening `centerOffset` afterwards. Never extend wall ends while
+     openings are already placed in Archicad — that combination has crashed Archicad with data
+     loss. Fix the parameter model, then delete + recreate.
 2. Create/modify walls from that graph, including thickness, offset/reference-line convention, building material, and layer intersection group.
 3. Verify wall joins before adding openings:
    - bounding boxes are not enough;
