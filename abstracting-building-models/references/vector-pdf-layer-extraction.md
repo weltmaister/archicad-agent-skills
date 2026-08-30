@@ -5,6 +5,17 @@ exact geometry. Extracting from a raster render throws both away. All facts belo
 live-verified (2026-08-20, PyMuPDF 1.2x, German as-built basement plan at 1:100). Order of
 operations:
 
+## 0. First: list the layers against the path types
+
+Before ANY geometry extraction, list the OCG layers and cross-tabulate them with
+the path types they contain (`f` fills / `s` strokes) plus the stroke widths.
+The layer structure carries half the building semantics (existing walls as
+poché, drywall as strokes only, stairs, hidden lines, fire-protection marks,
+new/demolition, shafts, dimensions per scale) — and which extraction method is
+even applicable follows from the path types: fill-based extraction only works
+on layers that HAVE fills. In live work, every extraction dead-end traced back
+to skipping this step.
+
 ## 1. Switch layers with the UI-config API, not `set_layer`
 
 `doc.set_layer(-1, on=[...], off=[...])` takes OCG **xrefs** and, on PyMuPDF 1.2x, silently

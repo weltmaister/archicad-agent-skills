@@ -101,6 +101,15 @@ count ink. Then apply:
 - Treads, direction arrow/diagonal, landings, boundaries/railings/walls.
 - Store stair bbox, baseline/path, flight width, number of visible treads if countable, start/end side, and uncertainty.
 - A stair is never "just lines" in the handoff model.
+- **What a floor plan does NOT say about a stair — never abstract stair geometry
+  from the plan alone.** The plan shows only the lower run up to the section
+  plane (~1 m above finished floor), cut off by the break line; landing
+  position, upper run, and riser count are NOT derivable from it, and the
+  hidden-line layer is often empty for stairwells. Request a section or ask the
+  user, and mark any assumption as such.
+- **A stair symbol with only 2-3 tread edges is a level step, not a storey
+  stair** — do not model a full-height stair there (live failure: a 3.10 m
+  stair was placed on a 3-step level adjustment).
 
 ### Objects / fixtures
 - Kitchen counters/island/sink/cooktop, bathroom sanitary fixtures, washing machine, built-ins, furniture if part of plan semantics.

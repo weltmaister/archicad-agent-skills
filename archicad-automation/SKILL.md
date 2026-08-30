@@ -119,6 +119,24 @@ check each item for an `elementId` vs. an `error` object.
   batch inputs clean rather than relying on guards.
 - **Version-gate everything**: many fields exist only from a specific Tapir release. The
   verified-schemas file carries the gates; probe the connected instance at session start.
+- **The most expensive failure class is "accepted and silently ignored"**: `succeeded:true`,
+  no item error, model unchanged or partially changed — verified live for slab holes in wrong
+  formats, roof `thickness`, stair step parameters, attribute deletes, and `ac_*` GDL
+  parameters. Read the RAW response JSON (not the expected path), and never let an empty
+  result stand without counter-checking one element whose target value is known.
+- **When a create parameter seems ignored, calibrate instead of guessing**: place two
+  throwaway elements far outside the model with two DIFFERENT values of the suspect
+  parameter, measure both bounding boxes, back-compute what actually applied, delete the
+  probes. Never run format probes on real project elements.
+- **Session entry probe**: time one 1-element and one 10-element read at session start; if
+  the batch is not clearly faster per element, loop single reads (a 10-element read has hung
+  >9 minutes while 30 single reads took 576 ms).
+- **Blockade diagnosis on timeouts**: send a command the HTTP server answers without
+  Archicad (an unknown command name returns "not found" instantly). If that returns but
+  element commands hang, Archicad itself is busy — open modal dialog (the error names it),
+  active tool, a user working in the model, or a locked Windows screen.
+- **Check the active window before interpreting element counts** — a section window in front
+  makes every count read 0 (`GetCurrentWindowType` first).
 
 ## Object and fixture placement: measure, then snap
 
