@@ -1,9 +1,9 @@
 ---
 name: archicad-automation
-description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
+description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 1.1.0
+  version: 3.0.0
   author: weltmaister
 ---
 
@@ -48,8 +48,12 @@ a fake Archicad that mirrors live-measured behavior (`python -m unittest discove
 
 1. **Discover the port**: scan 19723–19743 on the Archicad host; the first responding port is
    the active instance. The JSON server only listens while a project is open, and it listens on
-   localhost only — if your agent runtime cannot reach the Archicad host's localhost, run the
-   HTTP calls host-side.
+   localhost only — if your agent runtime cannot reach the Archicad host's localhost (e.g. a
+   Linux sandbox next to a Windows host), run the HTTP calls host-side and keep the scripts on
+   the host; sandbox↔host mount sync is unreliable for freshly written files, so hand data over
+   via stdout when in doubt. If TCP on a port is open but HTTP requests are closed immediately
+   (`RemoteDisconnected`), see the localhost-only/port-proxy note in
+   `references/tapir-http-direct-protocol.md`.
 2. **Verify connectivity**: `GetProjectInfo`.
 3. **Probe version and capabilities**: `GetAddOnVersion`, an `API.IsAddOnCommandAvailable` scan
    over your working command list, and field probes for version-sensitive fields. Different
@@ -62,6 +66,23 @@ a fake Archicad that mirrors live-measured behavior (`python -m unittest discove
 7. Present non-trivial mutation plans before executing.
 8. Execute minimal HTTP calls; batch where safe (see the batching gotchas in the references).
 9. **Verify with read-only calls and report evidence.**
+
+For deliverables meant for human reading/publishing, establish orientation early: verify project
+north / view rotation and place a north arrow from the office favorite library near the beginning
+of the documentation workflow, not as a late cosmetic afterthought. If north is unknown, say so
+instead of guessing from page appearance.
+
+## Office standard
+
+The office standard is inferred from the **currently open Archicad file**, not invented
+externally. Before modelling, inspect the existing resources through Tapir: favorites by element
+type, pen tables, layers and layer combinations, line types, fills, surfaces, building materials,
+composites, profiles, properties, classifications, zone categories, model view options, graphic
+overrides, renovation filters, and layout-book/master-layout conventions. Do not create new
+office conventions when suitable resources already exist in the file; if external guidance
+conflicts with the open file, report the mismatch and ask instead of silently overwriting
+attributes or favorites. The full checklist (source hierarchy, discovery questions, when to ask
+vs. discover) is `references/source-and-office-standard-checklist.md`.
 
 ## Protocol
 
@@ -120,6 +141,8 @@ check each item for an `elementId` vs. an `error` object.
 | `references/archicad-host-ui-state-and-publisher-recovery.md` | Modal-dialog blocks, dead navigator IDs, publish recovery. |
 | `references/overlay-*.md` + `scripts/calibrated_plan_overlay.py`, `scripts/proof_plan_layers.py` | Calibrated source-vs-model overlay proofs. |
 | `references/object-triage-and-opening-handing-notes.md` | Separating model objects from annotation libparts. |
+| `references/repair-vs-rebuild-decision.md` | When to keep patching vs. delete/recreate a group vs. rebuild. |
+| `references/source-and-office-standard-checklist.md` | Source hierarchy, discovery questions, ask-vs-discover rules. |
 | `templates/` | Rebuild-plan and overlay-report templates. |
 
 ## Golden rules (the short list)
@@ -156,6 +179,10 @@ check each item for an `elementId` vs. an `error` object.
   active tool, a user working in the model, or a locked Windows screen.
 - **Check the active window before interpreting element counts** — a section window in front
   makes every count read 0 (`GetCurrentWindowType` first).
+- **An empty `{}` publish response is ambiguous**: verify the target file's rewrite timestamp and
+  a fresh page render, never a stale image (see the publish-verification reference).
+- **Carrier/helper geometry is diagnostic only** — probe elements and helper linework never stay
+  in the final publish state; delete them once measured.
 
 ## Object and fixture placement: measure, then snap
 
@@ -173,8 +200,8 @@ prefer native elements or individual parts, and verify every placement by boundi
 
 ## Safety rules
 
-- Never delete, overwrite attributes/favorites, bulk-create, or change layout conventions
-  without explicit confirmation.
+- Never delete, overwrite attributes/favorites, bulk-create, change layout conventions, or
+  perform Teamwork reserve/release without explicit confirmation.
 - Default `overwriteExisting`-style flags to `false`.
 - If the open file is untitled or unsaved, say so before significant modelling.
 - If a command is missing on the connected build, state the limitation and offer a manual
@@ -187,3 +214,7 @@ prefer native elements or individual parts, and verify every placement by boundi
 
 Report: project/port used, planned vs. executed calls (high level), created/modified GUIDs and
 counts, verification evidence, and any unresolved assumptions.
+
+For pipelines that start from drawings/scans/references, accept the intermediate model from
+`abstracting-building-models` and preserve its evidence/confidence/uncertainty fields in the
+Archicad implementation notes.

@@ -3,7 +3,7 @@ name: abstracting-building-models
 description: Use when asked to turn architectural drawings — floor plans, sections, elevations, site plans, details, PDFs, or scans — into a structured parametric building model; to read or interpret measured/dimensioned drawings; to extract building geometry with evidence and uncertainty; to produce BIM-ready parametric JSON; or to prepare an evidence-backed intermediate model for Archicad automation.
 license: MIT
 metadata:
-  version: 1.0.0
+  version: 2.0.0
   author: weltmaister
 ---
 
@@ -170,19 +170,9 @@ For measured floor plans that will drive later Archicad repair or rebuild, the i
 
 **Calibrate the raster before measuring.** If the source is an image/PDF, do not eyeball positions from a low-resolution inline view — get the file and establish a pixel-to-meter transform first: project dark pixels onto X and Y, read the strong wall lines, and pin origin+scale from two known dimensions (for example: x=0 at px 2878 and x=13.5 at px 6067 gives 236.2 px/m; y=0 at px 4623 and y=10 at px 2258 gives 236.4 px/m). Then **measure** ambiguous geometry — non-rectangular rooms, stair runs, fixture centres — from the calibrated image instead of guessing (an L-shaped utility room is found from the wall line under the stair, not assumed). Overlay the resulting model back on the calibrated raster as the end-check (see the calibrated-overlay verification in the `archicad-automation` skill).
 
-### Positioning un-dimensioned elements (constraint-first, not pixel-first)
+### Positioning un-dimensioned elements
 
-Some elements carry no dimension text (e.g. terrace columns, fixtures, stairs). Do **not** just pixel-measure them — pixels are within 0.05-0.15 m and unanchored. Instead **anchor them to the dimensions you already trust** and let pixels fill only what is left. Strategies, strongest first, combined:
-
-1. **Constraint / alignment to dimensioned geometry** — un-dimensioned elements usually align with dimensioned ones (a column's outer face flush with the dimensioned terrace edge; an axis flush with a wall face or opening jamb; a fixture flush against a wall). Each such alignment fixes ONE coordinate exactly, with zero pixel error.
-2. **Symmetry** about a dimensioned axis (building centre, opening centre). Measure roughly, then force exact symmetry (average the pair). Halves the measurements and removes bias.
-3. **Regularity / module / grid** — repeated elements are usually equally spaced or on a module (often 12.5 cm). Fit the rough positions to an equal-spacing/grid model anchored at dimensioned endpoints (least-squares), instead of taking each centre independently.
-4. **Standard / catalogue size for the DIMENSION** — an un-dimensioned element's size is almost always a standard product or library part (column 24/30, door leaf 0.885, standard sanitary-fixture sizes). Placing the correct library part gives the true size with no measurement.
-5. **Sub-pixel centroid, not a single edge** — detect the whole outline (contour/Hough), fit a rectangle, take centroid + size, then snap to module. More robust than reading one edge.
-6. **Cross-view** — a section/elevation often dimensions what the plan omits (heights, depths). Reconcile across views.
-7. **Round to buildable values + carry an uncertainty flag** per coordinate ("exact-constrained" vs "measured plus/minus x") so only the genuinely uncertain ones need review.
-
-**Pipeline:** fix constrained coordinates (alignment/symmetry) exactly, then sub-pixel-measure the remaining free coordinate, snap to module/standard, enforce global constraints (symmetry, equal spacing) by a small fit, take size from the library part/standard, and verify on the calibrated overlay. Example: 4 terrace columns become "outer face flush to terrace edge 13.50 (x exact) + symmetric about y=5.0 + standard column size", not four independently pixel-read squares.
+For elements the drawing does not dimension (terrace columns, fixtures, stairs, built-ins): derive position/size **constraint-first** — alignment to dimensioned edges, symmetry, module, standard part size — never by pixel-reading. Full method and pipeline: `references/positioning-un-dimensioned-elements.md`.
 
 At minimum, preserve:
 
@@ -209,6 +199,12 @@ Important correction: PDF vector tracing or pixel vectorization may be used as d
 ## References
 
 Load the condensed domain notes in `references/drawing-reading-sources.md` when deeper grounding is needed.
+
+When the model is destined for a rule-driven Archicad build (`archicad-automation` →
+`scripts/build_from_model.py`), also fill the optional fields that script reads beyond the schema
+(datum `metadata.level_datum`, `walls[].role`/`is_load_bearing`, `slabs[].role`,
+`spaces[].floor_buildup`/`ceiling`, columns/beams/roofs blocks — the full list is in that script's
+header). Every such value must still carry source evidence or an explicit assumption.
 
 ## Boundary with Archicad automation
 

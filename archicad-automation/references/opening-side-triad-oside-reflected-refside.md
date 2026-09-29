@@ -4,11 +4,11 @@
 
 For Tapir/Archicad door/window side control, use the full side-and-handing triad:
 
-- `oSide` — host-wall side / inside-vs-outside symbol side. `false` = exterior/outside; `true` = interior/inside. This is the primary control for inward/outward placement relative to the wall.
+- `oSide` — host-wall side. WARNING — **corrected 2026-09-29 (measured on the door swing arc, AC28/1.5.9):** `true` puts the opening side LEFT of the host wall's drawing direction, regardless of the wall's mirror state. The earlier reading "false = outside, true = inside" holds only for mirrored, counter-clockwise-drawn exterior walls. It remains the primary control for inward/outward placement — but derive the needed value from the host wall's final direction, never from a fixed inside/outside mapping.
 - `reflected` — symbol mirroring along the Y axis; affects the opening/swing direction but does not by itself move the symbol to the other side of the host wall.
 - `refSide` — symbol mirroring along the X axis; hinge side (`false` left, `true` right).
 
-For inward-opening exterior doors, set `oSide: true` first, then set `reflected` and `refSide` for the intended swing/hinge.
+For inward-opening exterior doors, compute `oSide` from the host wall's drawing direction first, then set `reflected` and `refSide` for the intended swing/hinge.
 
 ## Why this matters
 
