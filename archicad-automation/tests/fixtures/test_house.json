@@ -1,0 +1,1076 @@
+{
+ "metadata": {
+  "project_name": "Test house v5 (office conventions + guideline parts, 2026-09-29)",
+  "model_version": "0.5",
+  "units": "m",
+  "level_datum": "OKFF",
+  "slab_story": "below",
+  "floor_buildup": 0.15,
+  "sill_reference": "OKFF",
+  "coordinate_system": {
+   "origin": "outer south-west corner",
+   "x_axis": "east",
+   "y_axis": "north",
+   "z_axis": "up"
+  },
+  "source_sheets": [
+   {
+    "id": "S_SPEC",
+    "title": "Spezifikation gebaeude.json + Bürovorlage",
+    "view_type": "unknown"
+   }
+  ]
+ },
+ "levels": [
+  {
+   "id": "L_UG",
+   "name": "UG",
+   "elevation": -3.0,
+   "floor_to_floor_height": 3.0
+  },
+  {
+   "id": "L_EG",
+   "name": "EG",
+   "elevation": 0.0,
+   "floor_to_floor_height": 3.0
+  },
+  {
+   "id": "L_OG",
+   "name": "OG",
+   "elevation": 3.0,
+   "floor_to_floor_height": 3.0
+  }
+ ],
+ "walls": [
+  {
+   "id": "W_EG_S",
+   "level_id": "L_EG",
+   "baseline": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_EG_O",
+   "level_id": "L_EG",
+   "baseline": [
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_EG_N",
+   "level_id": "L_EG",
+   "baseline": [
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_EG_W",
+   "level_id": "L_EG",
+   "baseline": [
+    [
+     0.0,
+     9.0
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_EG_IW",
+   "level_id": "L_EG",
+   "baseline": [
+    [
+     6.0,
+     0.0
+    ],
+    [
+     6.0,
+     9.0
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.135,
+   "material": "IW KS 11,5",
+   "is_load_bearing": false,
+   "status": "new"
+  },
+  {
+   "id": "W_OG_S",
+   "level_id": "L_OG",
+   "baseline": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_OG_O",
+   "level_id": "L_OG",
+   "baseline": [
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_OG_N",
+   "level_id": "L_OG",
+   "baseline": [
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_OG_W",
+   "level_id": "L_OG",
+   "baseline": [
+    [
+     0.0,
+     9.0
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "is_load_bearing": true,
+   "status": "new"
+  },
+  {
+   "id": "W_OG_IW",
+   "level_id": "L_OG",
+   "baseline": [
+    [
+     6.0,
+     0.0
+    ],
+    [
+     6.0,
+     9.0
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.135,
+   "material": "IW KS 11,5",
+   "is_load_bearing": false,
+   "status": "new"
+  },
+  {
+   "id": "P_S",
+   "level_id": "L_OG",
+   "role": "parapet",
+   "baseline": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "height": 0.6,
+   "is_load_bearing": true
+  },
+  {
+   "id": "P_O",
+   "level_id": "L_OG",
+   "role": "parapet",
+   "baseline": [
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "height": 0.6,
+   "is_load_bearing": true
+  },
+  {
+   "id": "P_N",
+   "level_id": "L_OG",
+   "role": "parapet",
+   "baseline": [
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "height": 0.6,
+   "is_load_bearing": true
+  },
+  {
+   "id": "P_W",
+   "level_id": "L_OG",
+   "role": "parapet",
+   "baseline": [
+    [
+     0.0,
+     9.0
+    ],
+    [
+     0.0,
+     0.0
+    ]
+   ],
+   "representation": "outer_face",
+   "thickness": 0.42,
+   "material": "AW KS 24 + WDVS 16",
+   "height": 0.6,
+   "is_load_bearing": true
+  },
+  {
+   "id": "GL_OG_S1",
+   "level_id": "L_OG",
+   "role": "railing",
+   "baseline": [
+    [
+     1.185,
+     -0.06
+    ],
+    [
+     2.445,
+     -0.06
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.04,
+   "height": 1.0,
+   "material": "Stahl verzinkt"
+  },
+  {
+   "id": "SF_S",
+   "level_id": "L_UG",
+   "role": "strip_footing",
+   "baseline": [
+    [
+     0.29,
+     0.29
+    ],
+    [
+     11.71,
+     0.29
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.6,
+   "height": 0.8,
+   "material": "Stahlbeton",
+   "is_load_bearing": true
+  },
+  {
+   "id": "SF_O",
+   "level_id": "L_UG",
+   "role": "strip_footing",
+   "baseline": [
+    [
+     11.71,
+     0.29
+    ],
+    [
+     11.71,
+     8.71
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.6,
+   "height": 0.8,
+   "material": "Stahlbeton",
+   "is_load_bearing": true
+  },
+  {
+   "id": "SF_N",
+   "level_id": "L_UG",
+   "role": "strip_footing",
+   "baseline": [
+    [
+     11.71,
+     8.71
+    ],
+    [
+     0.29,
+     8.71
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.6,
+   "height": 0.8,
+   "material": "Stahlbeton",
+   "is_load_bearing": true
+  },
+  {
+   "id": "SF_W",
+   "level_id": "L_UG",
+   "role": "strip_footing",
+   "baseline": [
+    [
+     0.29,
+     8.71
+    ],
+    [
+     0.29,
+     0.29
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.6,
+   "height": 0.8,
+   "material": "Stahlbeton",
+   "is_load_bearing": true
+  },
+  {
+   "id": "VW_EG_1",
+   "level_id": "L_EG",
+   "role": "installation_wall",
+   "baseline": [
+    [
+     11.43,
+     3.0
+    ],
+    [
+     11.43,
+     5.0
+    ]
+   ],
+   "representation": "centerline",
+   "thickness": 0.3,
+   "favorite": "GK Installationswand",
+   "is_load_bearing": false
+  }
+ ],
+ "openings": [
+  {
+   "id": "F_EG_S1",
+   "host_wall_id": "W_EG_S",
+   "kind": "window",
+   "offset_along_wall": 1.815,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_S2",
+   "host_wall_id": "W_EG_S",
+   "kind": "window",
+   "offset_along_wall": 4.605,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "T_EG_S3",
+   "host_wall_id": "W_EG_S",
+   "kind": "door",
+   "offset_along_wall": 7.395,
+   "width": 1.135,
+   "height": 2.135,
+   "sill_height": 0.0,
+   "swing": "inward",
+   "favorite": "T Eingang 1Fl 1,01x2,135"
+  },
+  {
+   "id": "F_EG_S4",
+   "host_wall_id": "W_EG_S",
+   "kind": "window",
+   "offset_along_wall": 10.185,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_O1",
+   "host_wall_id": "W_EG_O",
+   "kind": "window",
+   "offset_along_wall": 1.78,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_O2",
+   "host_wall_id": "W_EG_O",
+   "kind": "window",
+   "offset_along_wall": 4.5,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_O3",
+   "host_wall_id": "W_EG_O",
+   "kind": "window",
+   "offset_along_wall": 7.22,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_N1",
+   "host_wall_id": "W_EG_N",
+   "kind": "window",
+   "offset_along_wall": 1.815,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_N2",
+   "host_wall_id": "W_EG_N",
+   "kind": "window",
+   "offset_along_wall": 4.605,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_N3",
+   "host_wall_id": "W_EG_N",
+   "kind": "window",
+   "offset_along_wall": 7.395,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_N4",
+   "host_wall_id": "W_EG_N",
+   "kind": "window",
+   "offset_along_wall": 10.185,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_W1",
+   "host_wall_id": "W_EG_W",
+   "kind": "window",
+   "offset_along_wall": 1.78,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_W2",
+   "host_wall_id": "W_EG_W",
+   "kind": "window",
+   "offset_along_wall": 4.5,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_EG_W3",
+   "host_wall_id": "W_EG_W",
+   "kind": "window",
+   "offset_along_wall": 7.22,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "T_EG_IW1",
+   "host_wall_id": "W_EG_IW",
+   "kind": "door",
+   "offset_along_wall": 2.5,
+   "width": 0.885,
+   "height": 2.01,
+   "sill_height": 0.0,
+   "favorite": "T Innen 1Fl 88,5x2,01"
+  },
+  {
+   "id": "F_OG_S1",
+   "host_wall_id": "W_OG_S",
+   "kind": "window",
+   "offset_along_wall": 1.815,
+   "width": 1.26,
+   "height": 2.41,
+   "sill_height": 0.0,
+   "favorite": "F 1 bodentief, 1,26x2,41"
+  },
+  {
+   "id": "F_OG_S2",
+   "host_wall_id": "W_OG_S",
+   "kind": "window",
+   "offset_along_wall": 4.605,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_S3",
+   "host_wall_id": "W_OG_S",
+   "kind": "window",
+   "offset_along_wall": 7.395,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_S4",
+   "host_wall_id": "W_OG_S",
+   "kind": "window",
+   "offset_along_wall": 10.185,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_O1",
+   "host_wall_id": "W_OG_O",
+   "kind": "window",
+   "offset_along_wall": 1.78,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_O2",
+   "host_wall_id": "W_OG_O",
+   "kind": "window",
+   "offset_along_wall": 4.5,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_O3",
+   "host_wall_id": "W_OG_O",
+   "kind": "window",
+   "offset_along_wall": 7.22,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_N1",
+   "host_wall_id": "W_OG_N",
+   "kind": "window",
+   "offset_along_wall": 1.815,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_N2",
+   "host_wall_id": "W_OG_N",
+   "kind": "window",
+   "offset_along_wall": 4.605,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_N3",
+   "host_wall_id": "W_OG_N",
+   "kind": "window",
+   "offset_along_wall": 7.395,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_N4",
+   "host_wall_id": "W_OG_N",
+   "kind": "window",
+   "offset_along_wall": 10.185,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_W1",
+   "host_wall_id": "W_OG_W",
+   "kind": "window",
+   "offset_along_wall": 1.78,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_W2",
+   "host_wall_id": "W_OG_W",
+   "kind": "window",
+   "offset_along_wall": 4.5,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "F_OG_W3",
+   "host_wall_id": "W_OG_W",
+   "kind": "window",
+   "offset_along_wall": 7.22,
+   "width": 1.26,
+   "height": 1.385,
+   "sill_height": 0.9
+  },
+  {
+   "id": "WD_EG_IW1",
+   "host_wall_id": "W_EG_IW",
+   "kind": "opening",
+   "offset_along_wall": 6.5,
+   "width": 0.3,
+   "height": 0.3,
+   "sill_height": 2.2
+  }
+ ],
+ "slabs": [
+  {
+   "id": "S_BP",
+   "level_id": "L_EG",
+   "boundary": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "thickness": 0.3,
+   "top_elevation": -0.15
+  },
+  {
+   "id": "S_OG",
+   "level_id": "L_OG",
+   "boundary": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "thickness": 0.2,
+   "top_elevation": 2.85,
+   "openings": [
+    {
+     "center": [
+      10.9,
+      7.9
+     ],
+     "width": 0.6,
+     "depth": 0.6,
+     "id": "SCH_OG"
+    }
+   ]
+  },
+  {
+   "id": "S_DACH",
+   "level_id": "L_OG",
+   "boundary": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "thickness": 0.2,
+   "top_elevation": 5.85,
+   "openings": [
+    {
+     "center": [
+      10.9,
+      7.9
+     ],
+     "width": 0.6,
+     "depth": 0.6,
+     "id": "SCH_DACH"
+    }
+   ]
+  },
+  {
+   "id": "S_DD",
+   "level_id": "L_OG",
+   "role": "roof_insulation",
+   "material": "EPS 1",
+   "extent": "boundary",
+   "boundary": [
+    [
+     0.42,
+     0.42
+    ],
+    [
+     11.58,
+     0.42
+    ],
+    [
+     11.58,
+     8.58
+    ],
+    [
+     0.42,
+     8.58
+    ]
+   ],
+   "thickness": 0.2,
+   "bottom_elevation": 5.85,
+   "openings": [
+    {
+     "center": [
+      10.9,
+      7.9
+     ],
+     "width": 0.6,
+     "depth": 0.6,
+     "id": "SCH_DD"
+    }
+   ]
+  }
+ ],
+ "spaces": [
+  {
+   "id": "R_EG_1",
+   "level_id": "L_EG",
+   "name": "Wohnen/Essen",
+   "number": "EG.01",
+   "boundary": [
+    [
+     0.42,
+     0.42
+    ],
+    [
+     5.9325,
+     0.42
+    ],
+    [
+     5.9325,
+     8.58
+    ],
+    [
+     0.42,
+     8.58
+    ]
+   ],
+   "floor_finish": "Parkett",
+   "use": "Wohnen und Aufenthalt"
+  },
+  {
+   "id": "R_EG_2",
+   "level_id": "L_EG",
+   "name": "Küche/Flur",
+   "number": "EG.02",
+   "boundary": [
+    [
+     6.0675,
+     0.42
+    ],
+    [
+     11.58,
+     0.42
+    ],
+    [
+     11.58,
+     8.58
+    ],
+    [
+     6.0675,
+     8.58
+    ]
+   ],
+   "floor_finish": "Fliesen",
+   "use": "Wohnen und Aufenthalt"
+  },
+  {
+   "id": "R_OG_1",
+   "level_id": "L_OG",
+   "name": "Schlafen",
+   "number": "OG.01",
+   "boundary": [
+    [
+     0.42,
+     0.42
+    ],
+    [
+     5.9325,
+     0.42
+    ],
+    [
+     5.9325,
+     8.58
+    ],
+    [
+     0.42,
+     8.58
+    ]
+   ],
+   "floor_finish": "Teppich",
+   "use": "Wohnen und Aufenthalt",
+   "ceiling": {
+    "type": "suspended",
+    "material": "Holzrahmen abgehängt 35,5 cm"
+   }
+  },
+  {
+   "id": "R_OG_2",
+   "level_id": "L_OG",
+   "name": "Kind",
+   "number": "OG.02",
+   "boundary": [
+    [
+     6.0675,
+     0.42
+    ],
+    [
+     11.58,
+     0.42
+    ],
+    [
+     11.58,
+     8.58
+    ],
+    [
+     6.0675,
+     8.58
+    ]
+   ],
+   "floor_finish": "Parkett",
+   "use": "Wohnen und Aufenthalt"
+  }
+ ],
+ "columns": [
+  {
+   "id": "C_EG_1",
+   "level_id": "L_EG",
+   "position": [
+    3.0,
+    4.5
+   ],
+   "width": 0.3,
+   "depth": 0.3,
+   "material": "Stahlbeton"
+  },
+  {
+   "id": "PF_UG_1",
+   "level_id": "L_UG",
+   "role": "pad_footing",
+   "position": [
+    3.0,
+    4.5
+   ],
+   "width": 1.0,
+   "depth": 1.0,
+   "height": 0.6,
+   "material": "Stahlbeton"
+  }
+ ],
+ "technical_zones": [
+  {
+   "id": "HT_EG_2",
+   "level_id": "L_EG",
+   "boundary": [
+    [
+     8.0,
+     1.0
+    ],
+    [
+     11.0,
+     1.0
+    ],
+    [
+     11.0,
+     3.0
+    ],
+    [
+     8.0,
+     3.0
+    ]
+   ],
+   "bottom_elevation": 2.25,
+   "top_elevation": 2.65
+  }
+ ],
+ "site_areas": [
+  {
+   "id": "GF_1",
+   "kind": "GF",
+   "boundary": [
+    [
+     -6.0,
+     -6.0
+    ],
+    [
+     18.0,
+     -6.0
+    ],
+    [
+     18.0,
+     15.0
+    ],
+    [
+     -6.0,
+     15.0
+    ]
+   ],
+   "elevation": -0.3
+  },
+  {
+   "id": "BF_1",
+   "kind": "BF",
+   "boundary": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     12.0,
+     0.0
+    ],
+    [
+     12.0,
+     9.0
+    ],
+    [
+     0.0,
+     9.0
+    ]
+   ],
+   "elevation": -0.3
+  }
+ ],
+ "evidence": [
+  {
+   "id": "E_SPEC",
+   "sheet_id": "S_SPEC",
+   "kind": "other",
+   "confidence": "high",
+   "text": "generated for the rule test of build_from_model (29.09.2026)"
+  }
+ ],
+ "assumptions": [
+  {
+   "id": "A_OFFSET",
+   "statement": "offset_along_wall is measured from the baseline start to the opening centre",
+   "reason": "matches Tapir centerOffset"
+  },
+  {
+   "id": "A_DATUM",
+   "statement": "levels are OKFF; raw slabs lie 0.15 m lower",
+   "reason": "office template convention"
+  }
+ ],
+ "missing_information": []
+}

@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 1.0.0
+  version: 1.1.0
   author: weltmaister
 ---
 
@@ -25,6 +25,24 @@ is design intent and visual quality.
 - Direct Archicad operations: "create these walls", "place windows in wall X", "publish the floor plan".
 - Executing a source-derived building model produced by `abstracting-building-models`
   (use that skill FIRST when the task starts from scans, PDFs, photos, or vague references).
+
+## Building a whole model: `scripts/build_from_model.py`
+
+When a validated intermediate model exists (the JSON of `abstracting-building-models`), build it with
+`scripts/build_from_model.py` instead of composing create calls one by one. The script applies fixed
+modelling rules (catalog: `references/modeling-rule-catalog.md`; rules as data: `scripts/modeling_rules.py`):
+classification, load-bearing function, position and layer for every part, core-outside reference lines for
+exterior walls, raw-slab-to-raw-slab wall heights linked to the story above, slab edges on the wall core
+faces, floor build-ups and associative zones per room, openings, columns, beams, footings, parapets,
+two-part pitched roofs, optional DIN 277 bodies — and **reads every rule back** after building.
+
+Workflow: `--dry-run --port N` first (reads the office catalog read-only and completes the plan), show the
+plan summary, then repeat with `--confirm`; `--check report.json --port N` re-verifies a finished build
+without changing anything. Office-specific names (layers, favorites) come from `--office-profile
+profile.json`; the built-in default is an example profile from a German Archicad 28 template. Situational
+decisions (datum, load-bearing interior walls, finishes) come from the model fields listed in the script
+header. Stairs are not built by the script — create them separately. `tests/` carries a 134-test suite with
+a fake Archicad that mirrors live-measured behavior (`python -m unittest discover -s tests`).
 
 ## Operating sequence
 
@@ -89,6 +107,7 @@ check each item for an `elementId` vs. an `error` object.
 | `references/tapir-verified-command-schemas.md` | **Read first.** Hand-verified field names, gotchas, and version gates for the most-used commands. The authority when unsure about a payload. |
 | `references/tapir-full-command-catalog.md` | Complete command list with input/response schemas. Breadth; anything not in the verified file. |
 | `references/tapir-http-direct-protocol.md` | Protocol details, error semantics, command family overview. |
+| `references/modeling-rule-catalog.md` + `scripts/modeling_rules.py` | Fixed modelling rules for `build_from_model.py`: rule IDs with source/implementation/check, role table, situational defaults, live-proven API limits. |
 | `references/wall-reference-lines-and-opening-placement.md` | Wall reference-line direction rules, clean junctions, opening placement. |
 | `references/bim-element-modeling-rules.md` | Office-grade BIM semantics: mandatory classification triple, tool-choice matrix, per-storey walls, slab vs. build-up, roofs, openings/IfcOpenings, junction gates, zone QA. |
 | `references/opening-side-triad-oside-reflected-refside.md` | Door/window side and handing control (`oSide`, `reflected`, `refSide`). |
