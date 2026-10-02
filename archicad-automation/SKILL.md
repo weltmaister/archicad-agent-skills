@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.1.0
+  version: 3.1.1
   author: weltmaister
 ---
 
@@ -168,9 +168,13 @@ check each item for an `elementId` vs. an `error` object.
   verified-schemas file carries the gates; probe the connected instance at session start.
 - **The most expensive failure class is "accepted and silently ignored"**: `succeeded:true`,
   no item error, model unchanged or partially changed — verified live for slab holes in wrong
-  formats, roof `thickness`, stair step parameters, attribute deletes, and `ac_*` GDL
-  parameters. Read the RAW response JSON (not the expected path), and never let an empty
-  result stand without counter-checking one element whose target value is known.
+  formats, stair step parameters, attribute deletes, and `ac_*` GDL parameters. Read the RAW
+  response JSON (not the expected path), and never let an empty result stand without
+  counter-checking one element whose target value is known.
+- **A tool default can override a sent value**: a roof `thickness` looked ignored for weeks —
+  the roof tool default was a composite, which defines the thickness itself. Before calling a
+  parameter "ignored", read back the element's `structureType`/composite and send the structure
+  type explicitly (`structureType:"Basic"` + `thickness`).
 - **When a create parameter seems ignored, calibrate instead of guessing**: place two
   throwaway elements far outside the model with two DIFFERENT values of the suspect
   parameter, measure both bounding boxes, back-compute what actually applied, delete the

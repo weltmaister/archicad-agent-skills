@@ -1738,10 +1738,12 @@ def _build_members(plan, send, office, floor_map, report, missing) -> None:
                     payload["buildingMaterialId"] = {"guid": basic["guid"]}
                 else:
                     report["warnings"].append(f"{etype.lower()} {rec['model_id']}: building material '{rec['building_material']}' not found")
-            if rec.get("composite") and key == "roofs":
-                comp = composites.get(rec["composite"])
+            if key == "roofs":
+                comp = composites.get(rec["composite"]) if rec.get("composite") else None
                 if comp:
                     payload["structureType"], payload["compositeId"] = "Composite", {"guid": comp["guid"]}
+                else:  # a composite roof tool default would otherwise override the sent thickness (live 02.10.2026)
+                    payload["structureType"] = "Basic"
             if etype in ("Column", "Beam"):
                 _favorite_ok(rec, payload, office, etype, missing)
             rec["sent"] = payload

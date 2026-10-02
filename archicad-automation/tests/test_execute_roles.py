@@ -77,6 +77,17 @@ class ExtrasTest(unittest.TestCase):
         self.assertEqual((beam["buildingMaterialId"], beam["zCoordinate"]), ({"guid": "M-STB"}, 2.65))
         roofs = items(self.fake, "CreateRoofs", "roofsData")
         self.assertEqual([r["compositeId"]["guid"] for r in roofs], ["C-UD", "C-OD"])
+        self.assertEqual([r["structureType"] for r in roofs], ["Composite", "Composite"])
+
+    def test_roof_without_a_known_composite_is_sent_as_basic(self):
+        # a composite roof tool default would otherwise override the sent thickness (live 02.10.2026)
+        model = rich_model()
+        model["roofs"][0]["structure_material"] = "not in the office file"
+        _, fake = run(model)
+        structure, covering = items(fake, "CreateRoofs", "roofsData")
+        self.assertEqual(structure["structureType"], "Basic")
+        self.assertNotIn("compositeId", structure)
+        self.assertEqual(covering["structureType"], "Composite")
 
     def test_suspended_ceiling_uses_the_room_outline_and_its_composite(self):
         mods = items(self.fake, "ModifySlabs", "slabsWithDetails")

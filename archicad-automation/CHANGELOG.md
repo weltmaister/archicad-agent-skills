@@ -2,6 +2,17 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.1.1] — 2026-10-02
+
+- **Correction — roof `thickness` is not ignored** (live on 1.6.0, AC26 and AC28, both roof
+  classes): a composite roof tool default makes the new roof `structureType:"Composite"`, and the
+  composite defines the thickness. With `structureType:"Basic"` the sent thickness applies exactly.
+  The earlier "single-plane branch bypasses thickness" note was a misreading; corrected in
+  `tapir-verified-command-schemas.md` and SKILL.md (new golden rule: a tool default can override a
+  sent value). `GetDetailsOfElements` returns roof details on 1.6.0.
+- `build_from_model.py`: roofs without a resolvable composite are now sent as
+  `structureType:"Basic"`, so the planned thickness applies; new test (135 total).
+
 ## [3.1.0] — 2026-10-02
 
 Synced to Tapir **1.6.0** (installed and live-probed on AC26 and AC28).
