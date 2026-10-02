@@ -2,6 +2,29 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.1.0] — 2026-10-02
+
+Synced to Tapir **1.6.0** (installed and live-probed on AC26 and AC28).
+
+- New section "New since release 1.6.0" in `references/tapir-verified-command-schemas.md`:
+  - `DeleteElements` now answers `executionResults[]` per element (breaking); deletes on hidden or
+    locked layers are reported honestly; a nonexistent guid is reported as deleted, and after a
+    real element it stops that element's deletion.
+  - Text size is set via `details.typeSpecificDetails.height` (top-level `details.height` → 4002);
+    on AC25–AC27 text content is truncated to the first character (upstream #735 open).
+  - Release-note items not yet probed (SaveProject from any window, non-ASCII story names,
+    top-story height, new commands/fields).
+  - `CreateStairs.treadDepth` still ignored (#425, re-verified).
+- SetStories: the "#574 ineffective on AC28" status is replaced by the isolated cause — one-call
+  level changes converge only while the active story is at or below the lowest changed story;
+  recipe (activate via navigator first) plus two-pass fallback.
+- `ChangeWindow.storyIndex` confirmed as a no-op on 1.6.0 (AC26 and AC28); the navigator path is
+  AC27+, so AC25/AC26 cannot activate a story through Tapir.
+- Hidden-layer gotcha narrowed: deletes are honest since 1.6.0, SetDetails/MoveElements not re-tested.
+- `archicad-host-ui-state-and-publisher-recovery.md`: SaveProject 3D-window failure marked as
+  releases <= 1.5.9 (fix listed in 1.6.0, not yet verified).
+- SKILL.md: golden rules for the new DeleteElements shape and the AC-version traps.
+
 ## [3.0.0] — 2026-09-29
 
 Single-source consolidation: this repository is now the one and only version of the skill — the

@@ -20,7 +20,10 @@ then treat this as a **host UI-state block**, not as a geometry/schema bug.
 
 Do not interpret door/window/publisher failures observed during the modal state as evidence about defaults or payload shape.
 
-## SaveProject fails from the 3D window
+## SaveProject fails from the 3D window (releases <= 1.5.9)
+
+Release 1.6.0 lists a fix (#683, "Save the project from any window"); not yet live-verified.
+On older builds, or until verified on the connected instance, keep the discipline below.
 
 `SaveProject` returns `succeeded:true` at call level with an item error
 `-2130312308 "Failed to save the project."` whenever the **3D window** is the active
