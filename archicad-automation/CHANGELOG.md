@@ -2,6 +2,13 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.2.1] — 2026-10-05
+
+- **Correction:** the "AC28 text modification regression in 1.7.0" is not a regression. It
+  appeared in the first Archicad session after installing 1.7.0 and was gone after a restart;
+  the same calls and the whole earlier probe sequence passed in the fresh session. Now documented
+  as a session-state failure with "restart Archicad first" as the remedy (upstream #759).
+
 ## [3.2.0] — 2026-10-05
 
 Synced to Tapir **1.7.0** (installed and live-probed on AC26 and AC28).
