@@ -5,8 +5,9 @@ It reproduces the behaviour measured live on 29.09.2026 (AC28, Tapir 1.5.9), not
   LEFT of the drawing direction when not flipped and RIGHT when flipped; CoreOutside puts the skins in front of the
   core on the exterior side;
 - oSide = true puts a door's swing to the LEFT of the host wall direction;
-- ChangeWindow with storyIndex does not change the active story, a navigator StoryItem does; automatic zones are
-  only found on the active story;
+- ChangeWindow with storyIndex does not change the active story (Tapir <= 1.6.0; story_switch_by_index=True models
+  1.7.0+), a navigator StoryItem does (navigator_supported=False models AC25/AC26); automatic zones are only found
+  on the active story;
 - values can be silently ignored (switches below) so the verification has something to catch.
 """
 from __future__ import annotations
@@ -25,7 +26,7 @@ def _pt(c):
 class FakeArchicad:
     def __init__(self, office=None, version="1.5.9", window="FloorPlan", switchable=True, spaces=(), hidden_layers=(),
                  fail_zone_ids=(), ignore_classification=False, ignore_position=False, ignore_top_link=False,
-                 ignore_windows=False, invert_oside=False, story_switch_by_index=False, zone_base=-0.15,
+                 ignore_windows=False, invert_oside=False, story_switch_by_index=False, navigator_supported=True, zone_base=-0.15,
                  fixed_beam_length=None, opening_sill_shift=0.0, slab_outline_shift=0.0):
         self.office = copy.deepcopy(office or OFFICE)
         self.version, self.window, self.switchable = version, window, switchable
@@ -34,6 +35,7 @@ class FakeArchicad:
         self.fail_zone_ids = set(fail_zone_ids)
         self.ignore_classification, self.ignore_position, self.ignore_top_link = ignore_classification, ignore_position, ignore_top_link
         self.ignore_windows, self.invert_oside, self.story_switch_by_index = ignore_windows, invert_oside, story_switch_by_index
+        self.navigator_supported = navigator_supported
         self.zone_base = zone_base
         self.fixed_beam_length, self.opening_sill_shift = fixed_beam_length, opening_sill_shift
         self.slab_outline_shift = slab_outline_shift
@@ -213,6 +215,9 @@ class FakeArchicad:
             return {"currentWindowType": self.window}
         if command == "ChangeWindow":
             if "navigatorItemId" in params:
+                if not self.navigator_supported:  # AC25/AC26
+                    return {"success": False, "error": {"code": -2130312313,
+                            "message": "navigatorItemId requires Archicad 27 or later; use databaseId instead."}}
                 nav = params["navigatorItemId"]["guid"]
                 self.act_story = next(int(k) for k, v in o["story_items"].items() if v == nav)
                 self.window = "FloorPlan"

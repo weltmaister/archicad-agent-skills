@@ -116,6 +116,23 @@ class ZoneExecutionTest(unittest.TestCase):
         self.assertEqual([[z["floorIndex"] for z in call] for call in zone_calls], [[0], [1]])
         self.assertTrue(report["ok"], report["errors"])
 
+    def test_without_navigator_the_story_is_activated_by_index(self):
+        # AC25/AC26 refuse navigatorItemId; since Tapir 1.7.0 ChangeWindow.storyIndex activates the story (live 05.10.2026)
+        model = two_story_model()
+        report, fake = run(model, FakeArchicad(spaces=model["spaces"], navigator_supported=False, story_switch_by_index=True))
+        by_index = [p["storyIndex"] for c, p in fake.calls if c == "ChangeWindow" and "storyIndex" in p]
+        self.assertIn(1, by_index)
+        zone_calls = [p["zonesData"] for c, p in fake.calls if c == "CreateZones"]
+        self.assertEqual([[z["floorIndex"] for z in call] for call in zone_calls], [[0], [1]])
+        self.assertTrue(report["ok"], report["errors"])
+
+    def test_story_that_cannot_be_activated_is_reported(self):
+        # AC25/AC26 with Tapir <= 1.6.0: neither the navigator nor storyIndex works
+        model = two_story_model()
+        report, fake = run(model, FakeArchicad(spaces=model["spaces"], navigator_supported=False))
+        self.assertFalse(report["ok"])
+        self.assertTrue(any("could not be activated" in e for e in report["errors"]))
+
     def test_zone_without_a_closed_wall_ring_is_an_error_not_a_polygon(self):
         model = house()
         report, fake = run(model, FakeArchicad(spaces=model["spaces"], fail_zone_ids={"R1"}))

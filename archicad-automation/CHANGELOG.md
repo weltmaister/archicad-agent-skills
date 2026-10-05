@@ -2,6 +2,20 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.2.0] — 2026-10-05
+
+Synced to Tapir **1.7.0** (installed and live-probed on AC26 and AC28).
+
+- New section "New since release 1.7.0": `ChangeWindow.storyIndex` works (#752), `SetStories`
+  converges with any active story and restores it (#753), AC25-AC27 text content complete (#735),
+  batch reads fast (#586); **regression on AC28: every text modification fails** (workaround:
+  delete and recreate); #749/#751 and #425/#750 still unreleased.
+- SetStories/ChangeWindow sections: the 1.6.0 workarounds are now marked as applying to
+  releases <= 1.6.0 only.
+- `build_from_model.py`: stories are activated via the navigator item and, if that is refused
+  (AC25/AC26) or has no effect, via `ChangeWindow.storyIndex` (works since 1.7.0); each attempt is
+  confirmed via `actStory`. Two new tests (137 total).
+
 ## [3.1.1] — 2026-10-02
 
 - **Correction — roof `thickness` is not ignored** (live on 1.6.0, AC26 and AC28, both roof

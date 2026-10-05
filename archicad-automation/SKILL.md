@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.1.1
+  version: 3.2.0
   author: weltmaister
 ---
 
@@ -152,10 +152,10 @@ check each item for an `elementId` vs. an `error` object.
   A bare GUID string fails validation — and `DeleteElements` with the wrong shape returns
   `succeeded: true` while deleting **nothing**. Since 1.6.0 `DeleteElements` answers
   `executionResults[]` per element, but reports a nonexistent guid as deleted — always re-count.
-- **Archicad-version traps on 1.6.0:** on AC25–AC27 text content is truncated to its first
-  character (don't write texts there until upstream #735 ships); no story can be activated
-  through Tapir on AC25/AC26 (`ChangeWindow.storyIndex` is a no-op everywhere, the navigator
-  path is AC27+), which limits automatic zones and SetStories level changes to the active story.
+- **Archicad-version traps on 1.7.0:** on **AC28 every text modification fails** (content or
+  height, via `SetDetailsOfElements` or `ModifyTexts`) — delete and recreate the text instead;
+  creating texts works. On releases <= 1.6.0, AC25–AC27 truncated text content and
+  `ChangeWindow.storyIndex` was a no-op — both fixed in 1.7.0; probe the connected version.
 - **Top-level array keys differ between create and modify**: `wallsData` vs `wallsWithDetails`,
   `doorsWithDetails`, `elementsWithDetails` (for `SetDetailsOfElements`). Wrong key = whole call
   rejected, which can masquerade as "feature missing".

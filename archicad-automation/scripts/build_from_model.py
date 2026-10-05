@@ -1427,15 +1427,18 @@ def _favorite_ok(rec: dict, payload: dict, office: dict, kind: str, missing: set
 
 
 def _activate_story(send: Send, office: dict, story: int, report: dict) -> bool:
-    """Rule R4: switch the floor plan to the story through its navigator item (ChangeWindow.storyIndex does not, live 29.09.2026)."""
+    """Rule R4: make the story active. Its navigator item works on AC27+ with every Tapir version; ChangeWindow.storyIndex
+    works on every Archicad version since Tapir 1.7.0 (a silent no-op before). Each attempt is confirmed via actStory."""
     nav = (office.get("story_items") or {}).get(str(story))
-    if nav is None:
-        report["errors"].append(f"story {story}: no navigator item to activate it")
-        return False
-    send("ChangeWindow", {"navigatorItemId": {"guid": nav}})
+    if nav is not None:
+        send("ChangeWindow", {"navigatorItemId": {"guid": nav}})
+        if send("GetStories", {}).get("actStory") == story:
+            return True
+    send("ChangeWindow", {"windowType": "FloorPlan", "storyIndex": story})
     active = send("GetStories", {}).get("actStory")
     if active != story:
-        report["errors"].append(f"story {story} could not be activated (active story {active})")
+        report["errors"].append(f"story {story} could not be activated (active story {active}; navigator item "
+                                f"{'missing' if nav is None else 'refused'}, storyIndex needs Tapir 1.7.0+)")
         return False
     return True
 
