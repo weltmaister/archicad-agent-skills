@@ -15,7 +15,7 @@ All commands go through the `API.ExecuteAddOnCommand` envelope (see SKILL.md "Pr
 3. **Field probes** for version-sensitive fields (create a probe element far outside the model, read back, delete): `CreateWalls.arcAngle` → `4002 additionalProperties` means **< 1.5.4**; `GetStories` stories without `height` → **pre-#434**; `GetDetailsOfElements` wall details without `begThickness` → **<= 1.5.3**.
 4. Cache the result as a per-instance command/field matrix in the project folder and consult it instead of re-probing.
 
-Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0** (own sections below), **1.7.0 = current** (2026-10-04; own section below). Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
+Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1 = current** (2026-10-15; own section below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
 
 | Feature | Releases <= 1.5.3 | Since release 1.5.4 (2026-07-21) |
 |---|---|---|
@@ -51,7 +51,7 @@ Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), 
   - WARNING — **On releases <= 1.6.0 `ChangeWindow {windowType:"FloorPlan", storyIndex:N}` does NOT switch the active story** (success, `actStory` unchanged) → automatic zones on upper floors fail. **Fixed in 1.7.0 (#752, verified AC26 and AC28):** it now activates the story, and an out-of-range index fails cleanly. Alternative on AC27+: `ChangeWindow {navigatorItemId}` with the `StoryItem` from `GetNavigatorItemTree {navigatorMapId:"ProjectMap"}`. Always confirm via `GetStories.actStory`.
   - WARNING — **`ApplyFavoritesToElements` is not geometry-neutral:** an upper-story morph dropped by −3.00 m, a roof covering rose by +0.04 m. Use favorites only as `favoriteName` at creation.
   - WARNING — **Beams in the tested template have a fixed segment length:** `CreateBeams` always yields 0.40 m (tool default) or 10.00 m (a precast favorite); `endCoordinate` and `ModifyBeams` do not change it. Verify length via `details.begCoordinate/endCoordinate`.
-  - Wall favorites with a composite structure arrive single-skin through `CreateWalls` → always send `structureType`+`compositeId` along. Favorites bring layer, load-bearing function and position, but no classification.
+  - Wall favorites with a composite structure arrive single-skin through `CreateWalls` on releases <= 1.7.0 (fixed in 1.7.1) → sending `structureType`+`compositeId` along is safe on every version. Favorites bring layer, load-bearing function and position, but no classification.
   - 1.5.9 reads back: wall `flipped`, `referenceLineLocation`, `structureType`, `compositeId`, `relativeTopStory`, `topOffset`, `zoneRel`; `ModifyWalls` sets `referenceLineLocation`, `relativeTopStory`/`topOffset`, `zoneRel` (the old note "reference line only at create" is obsolete). Profile walls take the reference line from the profile.
   - Zones: "Fußbodendicke" (floor thickness) and "Abstand Oberkante"/"Lichte Raumhöhe" (top offset / clear height) are settable as length values through the official API; the relative top-story link only through Tapir (0 is ignored); the zone bottom offset is not settable (template convention). An automatic zone uses the inner edge.
   - Wall `CreateOpenings`: `basePoint` = centre on the wall line, `z` = sill; verify via the built-in property "Öffnung Brüstungshöhe zu Projektursprung" (GUID `D851A129-…`). No depth field → slots/niches cannot be built.
@@ -103,7 +103,7 @@ Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), 
 ### CreateSlabs — array key `slabsData`
 - Required: `level` (number — Z of the reference plane), `polygonCoordinates` [{x,y}, >=3]
 - Optional: `thickness`, `referencePlaneLocation` (enum: `Top`/`CoreTop`/`CoreBottom`/`Bottom`; basic slab supports only `Top`/`Bottom`), `polygonArcs`, `holes`
-- WARNING — **`buildingMaterialId` and `structureType` are rejected** (`4002`, AC28, current main build 2026-08-20) → slabs always get the tool-default material; there is no create-time way to set it (set afterwards via SetDetailsOfElements/ModifySlabs).
+- WARNING — **Releases <= 1.7.0: `buildingMaterialId` and `structureType` are rejected** (`4002`) → slabs get the tool-default material; set it afterwards via SetDetailsOfElements/ModifySlabs. **Since 1.7.1 `CreateSlabs` accepts `structureType`, `compositeId` and `buildingMaterialId`** (verified, see the 1.7.1 section).
 - WARNING — **`level` is absolute on create but story-relative on readback:** `CreateSlabs {level: 0.0, floorIndex: -1}` on a story at -3.10 produces a slab at absolute z -0.42..0.00 — but `GetDetailsOfElements` reports `details.level: 3.1` (= 0.00 - (-3.10)). A "find the slab at level X" filter written against the create value finds nothing.
 
 ### CreateZones — array key `zonesData`
@@ -205,6 +205,27 @@ These fields exist since release 1.5.4; older releases return `4002`. **Verified
 - **`GetDetailsOfElements` → `floorPlanPolygons`** (#437): optional per-element output — the cut-fill contour polygons as drawn in the floor plan, works for elements on any story (`allStories`) without switching the active view. Useful for outline extraction / overlay proofs.
 - **`ChangeWindow` → `storyIndex`** (#437): documented to switch the active story by index with `windowType:'FloorPlan'`, but a silent no-op on every release up to 1.6.0. **Works since 1.7.0** (#752, see the 1.7.0 section). `ChangeWindow {navigatorItemId}` is AC27+ only; AC25/AC26 reject it.
 
+## New since release 1.7.1 (2026-10-15, weekly patch)
+
+Live-verified on AC26 and AC28 (2026-10-16, untitled projects):
+
+- **`CreateSlabs` accepts `structureType`, `compositeId` and `buildingMaterialId`.** A composite
+  slab reads back `structureType:"Composite"` with the sent `compositeId` and the composite's
+  thickness; `structureType:"Basic"` + `buildingMaterialId` + `thickness` reads back exactly.
+  Before 1.7.1 these fields were rejected with `4002`.
+- **`CreateWalls` with `favoriteName` keeps the favorite's composite** (and reference line, top
+  link, offsets per the release notes): favorites with a composite now arrive as composites. The
+  older "arrives single-skin" rule applies to releases <= 1.7.0 only. Sending
+  `structureType`+`compositeId` explicitly still works and stays the safe choice across versions.
+- **`thickness` is now documented as Basic-only** for walls, slabs and roofs (matches the roof
+  finding of 2026-10-02).
+- **Unchanged (fixes not yet released):** the AC25–AC27 text-modification failure (below), the
+  nonexistent-guid trap of `DeleteElements` (#749/#751), `CreateStairs.treadDepth` (#425/#750).
+- **New (release notes, probe before use):** 17 additional wall fields in Get/Set/Create, IFC
+  GlobalId per story in `GetStories` (AC28+), Teamwork commands for lockable object sets and
+  hotlink management, `UpdateHotlinks`/`ChangeHotlinkNodes`, `Get/SetMarkerParametersOfElements`
+  for window/door markers, RGB fill colours for hatches.
+
 ## New since release 1.7.0 (2026-10-04, first monthly minor release)
 
 Live-verified on the official binaries for AC26 and AC28 (2026-10-05, untitled projects):
@@ -212,7 +233,7 @@ Live-verified on the official binaries for AC26 and AC28 (2026-10-05, untitled p
 - **`ChangeWindow {FloorPlan, storyIndex}` activates the story** (#752; out-of-range -> `-2130313114 "storyIndex is out of range..."`). AC25/AC26 can now activate stories through Tapir for the first time.
 - **`SetStories` converges with any active story** (#753): it switches to the lowest changed story internally and restores the active story (`actStory` reads the same before and after).
 - **Text content on AC25-AC27 is complete** (#735): `"Hello Tapir"` reads back in full on AC26; `ModifyTexts` and `SetDetailsOfElements` content/height changes work there.
-- WARNING — **Session state can block text modifications (AC28, observed once):** in the first Archicad session after installing 1.7.0, every text MODIFICATION failed — `SetDetailsOfElements` with `typeSpecificDetails.height` or `.text`, and `ModifyTexts` with `text` and/or `style.height`, all returned `-2130312713` ("Failed to change element" / "Failed to modify the Text."; decoded upstream as `APIERR_MODULCMDNOTSUPPORTED`), while angle/position changes and `CreateTexts` worked. **After restarting Archicad the same calls and the whole earlier probe sequence passed** — not reproducible, trigger unknown (upstream #759). If you hit this code on text modifications: restart Archicad first; only if it persists, delete and recreate the text.
+- WARNING — **AC25–AC27: modifying the content or size of a text with two or more characters fails** (1.7.0 and 1.7.1, AC26 verified 2026-10-16, deterministic across sessions): `SetDetailsOfElements` with `typeSpecificDetails.height` or `.text`, and `ModifyTexts` with `text` and/or `style.height`, return `-2130312713` ("Failed to change element" / "Failed to modify the Text."), element unchanged. A one-character text changes fine; angle, position, justification, layer and style-only changes work; `CreateTexts` works (full content since #735). AC28 is not affected. Likely tied to #735's UTF-16/character-offset handling for pre-28 versions (upstream #759). **Workaround on AC25–AC27: delete the text and create it anew** with the target content and size. (On 2026-10-05 this was misattributed to AC28 and to session state — the probe scripts identified the instance by port, and the ports had swapped.)
 - **Batch reads are fast again** (#586 removes the floor-plan decomposition for non-construction element types): 10 walls in one `GetDetailsOfElements` 32 ms vs 10 single reads 122-213 ms on both instances (scratch project; a real-model re-measure is pending). Walls still carry `floorPlanPolygons`.
 - **Unchanged (fixes not yet in a release):** `DeleteElements` still reports a nonexistent guid as deleted and rolls back a real element listed before it (#749/#751); `CreateStairs.treadDepth` still ignored (#425/#750). Both fixes were verified on a seat (2026-10-02) and await merge.
 - **New (release notes, probe before use):** `SetIFCPropertiesOfElements`; survey point position and IFC map conversion X axis/scale in `Get/SetGeoLocation`; Archicad 30 builds; the Add-On's auto-update now runs the Tapir Installer.

@@ -2,6 +2,19 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.3.0] — 2026-10-16
+
+Synced to Tapir **1.7.1** (both instances updated through Tapir's own auto-update; live-probed).
+
+- New section "New since release 1.7.1": `CreateSlabs` accepts structure, composite and building
+  material at create; `CreateWalls` keeps a favorite's composite; `thickness` documented as
+  Basic-only. Older notes marked as applying to releases <= 1.7.0.
+- **Correction of 3.2.1:** the text-modification failure is not session state and not AC28. It is
+  deterministic on AC25–AC27 for texts with two or more characters (AC26 verified across two
+  sessions; one-character texts change fine; AC28 unaffected). The October 5 probes identified
+  instances by port, and the ports had swapped. Workaround: delete and recreate.
+- New golden rule: identify each Archicad by `API.GetProductInfo`, never by its port.
+
 ## [3.2.1] — 2026-10-05
 
 - **Correction:** the "AC28 text modification regression in 1.7.0" is not a regression. It

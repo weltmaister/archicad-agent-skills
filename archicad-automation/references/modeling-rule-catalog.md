@@ -49,7 +49,7 @@ T2 (ring beam) ⛔, see part G.
 | B3 | An interior wall's unknown load-bearing state is not guessed ("Nicht definiert" + warning). | MR p.20 | role `interior_wall.from_model` | test | ✅ |
 | B4 | Classify the whole part or its segments, never both. | MR p.11 | single-segment parts only, classification on the element | — | ✅ |
 | B5 | Layer per office template (names, never hard-coded indices). | VS, L29 | `SetDetailsOfElements.layerIndex` | read-back | ✅ 🟢 |
-| B6 | Composite from the office file by name; wall favorites with a composite structure arrive single-skin through `CreateWalls` → always send the structure explicitly. | VS, L29 | `structureType` + `compositeId`/`buildingMaterialId` | `details.structureType/compositeId` | ✅ 🟢 |
+| B6 | Composite from the office file by name; wall favorites with a composite structure arrive single-skin through `CreateWalls` (releases <= 1.7.0) → always send the structure explicitly. | VS, L29 | `structureType` + `compositeId`/`buildingMaterialId` | `details.structureType/compositeId` | ✅ 🟢 |
 | B7 | Empty window/door openings with the window/door tool, classified as window/door. | MR p.31 | `window`/`door` → CreateWindows/Doors | — | ✅ |
 | B8 | Never create or overwrite attributes or favorites; favorites only at creation, never afterwards (`ApplyFavoritesToElements` moved an upper-story morph by −3.00 m and a roof covering by +0.04 m, live). | SK, L29 | favorites only as `favoriteName` in the create call | test | ✅ 🟢 |
 
