@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.3.0
+  version: 3.4.0
   author: weltmaister
 ---
 
@@ -154,9 +154,9 @@ check each item for an `elementId` vs. an `error` object.
   `executionResults[]` per element, but reports a nonexistent guid as deleted — always re-count.
 - **Identify each Archicad by `API.GetProductInfo`, never by its port** — ports follow the start
   order and swap between sessions.
-- **Archicad-version traps:** on AC25–AC27 (Tapir 1.7.0/1.7.1), changing the content or size of a
-  text with two or more characters fails with `-2130312713` — delete and recreate it instead
-  (AC28 unaffected). On releases <= 1.6.0, AC25–AC27 truncated text content and
+- **Archicad-version traps:** on AC25–AC27 with Tapir 1.7.0/1.7.1 (not 1.7.2), changing the content
+  or size of a text with two or more characters fails with `-2130312713` — delete and recreate it
+  instead (AC28 unaffected). On releases <= 1.6.0, AC25–AC27 truncated text content and
   `ChangeWindow.storyIndex` was a no-op — both fixed in 1.7.0; probe the connected version.
 - **Top-level array keys differ between create and modify**: `wallsData` vs `wallsWithDetails`,
   `doorsWithDetails`, `elementsWithDetails` (for `SetDetailsOfElements`). Wrong key = whole call

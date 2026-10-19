@@ -2,6 +2,25 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.4.0] — 2026-10-19
+
+Synced to Tapir **1.7.2** (both instances updated through Tapir's own auto-update; live-probed on
+AC26 and AC28 with the community test runner's checks).
+
+- **The full command catalog is complete again.** It still listed Tapir 1.5.3 (about 180
+  commands); it is now regenerated from Tapir 1.7.2's own command reference (314 commands, with
+  group, introducing version and schemas) by the new `tools/generate_tapir_catalog.py`, which
+  carries the hand-written notes over. Cross-cutting notes from the old trailing sections moved
+  into one section at the top.
+- New section "New since release 1.7.2": text content and size change on AC25–AC27 again (#886);
+  `MoveElements`/`RotateElements` report elements they cannot edit (#861); verified examples for
+  `GetQuantitiesOfElements`, `Get3DGeometryOfElements`, `CreateCurtainWalls`,
+  `CreateLevelDimensions`, `CreateGridElements`/`GetGridElements`. Release-note items that were
+  not probed are marked as such, among them the now required `parentNavigatorItemId` of
+  `CloneProjectMapItemToViewMap`/`CreateViewsInViewMap` (#776).
+- The text-modification warning applies to 1.7.0/1.7.1 only; the stale `ChangeWindow` note in the
+  catalog is corrected.
+
 ## [3.3.0] — 2026-10-16
 
 Synced to Tapir **1.7.1** (both instances updated through Tapir's own auto-update; live-probed).

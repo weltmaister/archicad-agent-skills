@@ -15,7 +15,7 @@ All commands go through the `API.ExecuteAddOnCommand` envelope (see SKILL.md "Pr
 3. **Field probes** for version-sensitive fields (create a probe element far outside the model, read back, delete): `CreateWalls.arcAngle` → `4002 additionalProperties` means **< 1.5.4**; `GetStories` stories without `height` → **pre-#434**; `GetDetailsOfElements` wall details without `begThickness` → **<= 1.5.3**.
 4. Cache the result as a per-instance command/field matrix in the project folder and consult it instead of re-probing.
 
-Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1 = current** (2026-10-15; own section below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
+Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1** (2026-10-15), **1.7.2 = current** (2026-10-19; own sections below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
 
 | Feature | Releases <= 1.5.3 | Since release 1.5.4 (2026-07-21) |
 |---|---|---|
@@ -63,7 +63,7 @@ Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), 
 - **`CreateWalls` `height`: template-dependent on releases <= 1.5.3, deterministic on fixed builds.** If the wall tool default is top-linked, the story link wins and the explicit `height` is ignored (cause of the old "height not honored" reports; on other templates it works). **Since release 1.5.4 (#446):** an explicit `height` resolves the link and ALWAYS applies (verified live: Create 2.2 / Modify 1.8). On releases <= 1.5.3: check/re-set the height with `ModifyWalls` after the create and verify via bbox.
 - **There is NO `GetDoorsDetails` / `GetWindowsDetails`** — calling them returns `4010` (command not registered). Use **`GetDetailsOfElements`**, which returns width/height/sillHeight/centerOffset/reflected/refSide/oSide for doors and windows. (The rendered 2D door-swing image is not retrievable via the API; check the swing visually in the host.)
 - **`DeleteElements` needs `{"elements":[{"elementId":{"guid":...}}]}`** — the shorthand `[{"guid":...}]` **fails silently AND returns `succeeded:true`** (verified live: the call succeeded while 0 of 2 walls were deleted — a common root cause of "it didn't delete" / "duplicate" confusion). Since 1.6.0 the response is `executionResults[]` per element (see the 1.6.0 section, including the nonexistent-guid trap). Always re-check with a `GetElementsByType` count afterwards.
-- WARNING — **Hidden layer = element is silently frozen (live-verified AC28, 2026-08-20; = upstream issue #555).** While an element's layer has `isHidden:true`, `SetDetailsOfElements` returns `success:true` and changes **nothing**; on releases <= 1.5.9 `DeleteElements` did the same and sometimes **hung >25 s**. **Since 1.6.0 (#679) a delete there is reported honestly** as a failed per-element result ("not editable"); `SetDetailsOfElements` and `MoveElements` were not re-tested — treat them as still frozen.
+- WARNING — **Hidden layer = element is silently frozen (live-verified AC28, 2026-08-20; = upstream issue #555).** While an element's layer has `isHidden:true`, `SetDetailsOfElements` returns `success:true` and changes **nothing**; on releases <= 1.5.9 `DeleteElements` did the same and sometimes **hung >25 s**. **Since 1.6.0 (#679) a delete there is reported honestly, and since 1.7.2 (#861) `MoveElements`/`RotateElements` too** (verified with a locked layer, AC26 and AC28) as a failed per-element result ("not editable"); `SetDetailsOfElements` and `MoveElements` were not re-tested — treat them as still frozen.
   - Live proof: a probe slab on a hidden layer — `SetDetailsOfElements` → new `layerIndex` returned success, readback unchanged; four `DeleteElements` calls returned success, `GetElementsByType` still listed the slab. After `CreateLayers {"layerDataArray":[{"name":"<that layer>","isHidden":false,"isLocked":false}],"overwriteExisting":true}` the **next** delete removed it immediately.
   - **Root trap:** creates without an explicit layer inherit the **tool default layer**, which can be a hidden one — such elements are born un-editable and un-deletable.
   - **Protocol before any delete/modify batch:** `GetAttributesByType(Layer)` → `GetLayers(attributeIds)` and check `isHidden` for every layer you will touch. If hidden: unhide via `CreateLayers` + `overwriteExisting`, mutate, then **restore `isHidden`** — the hidden state is part of the office template and must not be left changed.
@@ -205,6 +205,50 @@ These fields exist since release 1.5.4; older releases return `4002`. **Verified
 - **`GetDetailsOfElements` → `floorPlanPolygons`** (#437): optional per-element output — the cut-fill contour polygons as drawn in the floor plan, works for elements on any story (`allStories`) without switching the active view. Useful for outline extraction / overlay proofs.
 - **`ChangeWindow` → `storyIndex`** (#437): documented to switch the active story by index with `windowType:'FloorPlan'`, but a silent no-op on every release up to 1.6.0. **Works since 1.7.0** (#752, see the 1.7.0 section). `ChangeWindow {navigatorItemId}` is AC27+ only; AC25/AC26 reject it.
 
+## New since release 1.7.2 (2026-10-19, weekly patch with 43 new commands)
+
+Live-verified on AC26 and AC28 (GER, 2026-10-19, untitled projects, through the update Tapir
+offered itself) with the community test runner's checks:
+
+- **Text content and size change on AC25–AC27 again** (#886, fixes #759): on AC26 a two-word text
+  is resized (`7.5`) and rewritten (`"Changed text"`) by `SetDetailsOfElements`/`ModifyTexts`, and
+  reads back. The "delete and recreate" workaround below is only needed on 1.7.0/1.7.1.
+- **`MoveElements` and `RotateElements` report elements they cannot edit** (#861): a wall on a
+  locked layer gets `success:false` per element and stays where it is. Before 1.7.2 the call
+  reported success and did nothing. (`SetDetailsOfElements` on a hidden layer was not re-tested.)
+- **New commands, verified:**
+  - `GetQuantitiesOfElements {elements}` → `quantitiesOfElements[].{type, quantities, composites[]}`;
+    one composite item per skin (one for Basic). A 5 x 2.5 x 0.3 m Basic wall reads
+    `composites[0].volume` = 3.75 exactly. Types: Wall, Column, Beam, Slab, Roof, Shell, Morph,
+    Zone and their segments.
+  - `Get3DGeometryOfElements {elements}` → `geometries3D[].bodies[]` with world-coordinate
+    `vertices` and planar faces; works for a curtain wall (subelements included).
+  - `CreateCurtainWalls {curtainWallsData:[{coordinates:[two or more points], height}]}` creates a
+    curtain wall with the tool's default pattern; `primaryPattern`/`secondaryPattern`/`cells` set
+    the grid.
+  - `CreateLevelDimensions {levelDimensionsData:[{position, level}]}`; with `parentElementId` the
+    dimension is associative to a slab, mesh, roof ...
+  - `CreateGridElements {gridElements:[{begCoordinate, endCoordinate}]}` and `GetGridElements`
+    (AC26+).
+- **Unchanged (fixes not yet merged):** `DeleteElements` nonexistent-guid trap (#749; #751 waits
+  for a maintainer), `CreateStairs.treadDepth` (#425; #750 waits for a maintainer). Both still fail
+  the runner's checks on 1.7.2.
+- **New or changed (release notes, not verified live - probe before relying on them):**
+  - `CreateZones` activates the story of an automatic zone itself (#854) - no `ChangeWindow`
+    needed before an automatic zone on another story.
+  - `CloneProjectMapItemToViewMap` and `CreateViewsInViewMap` now **require**
+    `parentNavigatorItemId` (#776) - older calls without it are rejected.
+  - `RenameNavigatorItem` fails when Archicad keeps the old name (#851); `ExportFavorites` answers
+    with an ExecutionResult (#872).
+  - GDL array parameters are written through the API (#558); `fontName` accepted on text and label
+    styles and runs (#845); `CreateMEPRoutingElements` takes `layerIndex` (#881).
+  - New: `Get/Set3DProjectionSettings`, rename/delete of design options, sets and combinations,
+    `SaveCurrentWindowAsImage`, graphic override rules and combinations (+ current window's
+    combination on AC30), electrical read/write and MEP fitting preference tables (AC30),
+    `GetGridElementDefaults`, creation parameters for curved beams and box morphs (#878).
+  - The full list of commands with their schemas is in `tapir-full-command-catalog.md`
+    (regenerated from 1.7.2's own command reference, 314 commands).
+
 ## New since release 1.7.1 (2026-10-15, weekly patch)
 
 Live-verified on AC26 and AC28 (2026-10-16, untitled projects):
@@ -233,7 +277,7 @@ Live-verified on the official binaries for AC26 and AC28 (2026-10-05, untitled p
 - **`ChangeWindow {FloorPlan, storyIndex}` activates the story** (#752; out-of-range -> `-2130313114 "storyIndex is out of range..."`). AC25/AC26 can now activate stories through Tapir for the first time.
 - **`SetStories` converges with any active story** (#753): it switches to the lowest changed story internally and restores the active story (`actStory` reads the same before and after).
 - **Text content on AC25-AC27 is complete** (#735): `"Hello Tapir"` reads back in full on AC26; `ModifyTexts` and `SetDetailsOfElements` content/height changes work there.
-- WARNING — **AC25–AC27: modifying the content or size of a text with two or more characters fails** (1.7.0 and 1.7.1, AC26 verified 2026-10-16, deterministic across sessions): `SetDetailsOfElements` with `typeSpecificDetails.height` or `.text`, and `ModifyTexts` with `text` and/or `style.height`, return `-2130312713` ("Failed to change element" / "Failed to modify the Text."), element unchanged. A one-character text changes fine; angle, position, justification, layer and style-only changes work; `CreateTexts` works (full content since #735). AC28 is not affected. Likely tied to #735's UTF-16/character-offset handling for pre-28 versions (upstream #759). **Workaround on AC25–AC27: delete the text and create it anew** with the target content and size. (On 2026-10-05 this was misattributed to AC28 and to session state — the probe scripts identified the instance by port, and the ports had swapped.)
+- WARNING (releases 1.7.0 and 1.7.1 only — **fixed in 1.7.2**, #886, verified on AC26 2026-10-19) — **AC25–AC27: modifying the content or size of a text with two or more characters fails** (1.7.0 and 1.7.1, AC26 verified 2026-10-16, deterministic across sessions): `SetDetailsOfElements` with `typeSpecificDetails.height` or `.text`, and `ModifyTexts` with `text` and/or `style.height`, return `-2130312713` ("Failed to change element" / "Failed to modify the Text."), element unchanged. A one-character text changes fine; angle, position, justification, layer and style-only changes work; `CreateTexts` works (full content since #735). AC28 is not affected. Likely tied to #735's UTF-16/character-offset handling for pre-28 versions (upstream #759). **Workaround on AC25–AC27: delete the text and create it anew** with the target content and size. (On 2026-10-05 this was misattributed to AC28 and to session state — the probe scripts identified the instance by port, and the ports had swapped.)
 - **Batch reads are fast again** (#586 removes the floor-plan decomposition for non-construction element types): 10 walls in one `GetDetailsOfElements` 32 ms vs 10 single reads 122-213 ms on both instances (scratch project; a real-model re-measure is pending). Walls still carry `floorPlanPolygons`.
 - **Unchanged (fixes not yet in a release):** `DeleteElements` still reports a nonexistent guid as deleted and rolls back a real element listed before it (#749/#751); `CreateStairs.treadDepth` still ignored (#425/#750). Both fixes were verified on a seat (2026-10-02) and await merge.
 - **New (release notes, probe before use):** `SetIFCPropertiesOfElements`; survey point position and IFC map conversion X axis/scale in `Get/SetGeoLocation`; Archicad 30 builds; the Add-On's auto-update now runs the Tapir Installer.
