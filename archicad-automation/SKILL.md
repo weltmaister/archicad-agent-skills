@@ -1,9 +1,9 @@
 ---
 name: archicad-automation
-description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
+description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, sections and details (Detail tool workflow: detail markers placed in an existing 1:50 section, 2D drafting in the detail window), drawings on layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.4.1
+  version: 3.5.0
   author: weltmaister
 ---
 
@@ -23,6 +23,8 @@ is design intent and visual quality.
 ## When to use
 
 - Direct Archicad operations: "create these walls", "place windows in wall X", "publish the floor plan".
+- Documentation: sections at 1:50, details via the Detail tool, drawings on layouts (see
+  "Documentation views" below — recommended workflow for details).
 - Executing a source-derived building model produced by `abstracting-building-models`
   (use that skill FIRST when the task starts from scans, PDFs, photos, or vague references).
 
@@ -197,6 +199,98 @@ check each item for an `elementId` vs. an `error` object.
   a fresh page render, never a stale image (see the publish-verification reference).
 - **Carrier/helper geometry is diagnostic only** — probe elements and helper linework never stay
   in the final publish state; delete them once measured.
+
+## Documentation views: sections, details, drawings
+
+### Recommended workflow for details
+
+Details are **not** separate sections. The workflow is the Archicad Detail tool:
+
+1. Every cut exists **once** as a model section at 1:50 (e.g. the cross-section through a shaft),
+   created from a section marker in the floor plan and kept up to date from the model.
+2. A detail is marked **inside that 1:50 section window** with the Detail tool: a *source* Detail
+   marker with an area-based geometry method (rectangle, rotated rectangle, polygon) and
+   "Create new detail viewpoint". Archicad creates a Detail viewpoint (Project Map, own Detail
+   window) that is a **2D copy** of the marked part of the section.
+3. Everything the model does not show (flashings, sealing layers, profiles, battens, screws,
+   leader markers, hatches, notes, detail dimensions) is drafted with **2D elements in the Detail
+   window**, on the project's drafting/annotation layers.
+4. Linked Detail markers (no model source) are only references to an existing detail/drawing.
+5. "Rebuild from source view" regenerates the model-derived 2D part of a detail. Community reports
+   say manually edited exploded elements can be lost while newly drafted elements usually survive —
+   keep drafting on its own layer and check the detail after every rebuild.
+6. Never create one model section per detail just to get a 1:5 drawing: it multiplies views,
+   section markers and vertical ranges, and puts the 2D drafting into section databases where a
+   model rebuild changes the context under it.
+
+Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint with Model Source".
+
+### What the API can and cannot do here (live session, AC26 / Tapir 1.7.1)
+
+- **No command places a source Detail marker** or rebuilds a detail (requested upstream as #1377;
+  what works on existing markers is in `tapir-verified-command-schemas.md`, "Detail and Worksheet
+  markers"). `CreateDetails` only makes
+  *independent* detail databases without model source. Placing the marker in the 1:50 section is a
+  manual step (or UI automation with the user's consent) — say so and ask for it; do not fall back
+  to a separate section.
+- Once the marker exists, the detail is fully scriptable: find the `DetailDrawingItem` in the
+  Project Map, `GetDatabaseIdFromNavigatorItemId`, `ChangeWindow {windowType:"Details", databaseId}`,
+  then use the 2D create commands (`CreateLineElements`, `CreateArcs`, `CreateCircles`,
+  `CreateSplines`, `CreateHatches`, `CreateTexts`, `CreateLabels`) in that database. Detail markers
+  are readable as element type `Detail` (`DetailWorksheetDetails`: clipPolygon, linkData).
+- **Hatches**: send the polygon *without* the closing point — a closed coordinate list (first =
+  last) fails with "Failed to create new Hatch".
+- **Reusing old 2D detail drafting**: copy by zones with a translation per zone, anchored on stable
+  features (finished outer face, top edge of the new roof, surface of the existing roof); exclude
+  everything the model/detail copy already shows; log every created GUID so the copy can be undone;
+  render the layout and check visually before declaring it done.
+- Section markers (`CutPlane`) are not readable or editable via the API ("Not yet supported element
+  type"): marker length and vertical range are UI-only.
+
+### Drawings and layouts (live session, AC26 / Tapir 1.7.1)
+
+- A newly created section database only becomes reachable after it has been placed as a drawing;
+  `ChangeWindow` by navigatorItemId is rejected on AC25/AC26.
+- **Never clip drawings of model sections/elevations via `clipPolygon`** (at creation or later): the
+  drawing becomes blank. Limit the view through the marker (length, vertical range) instead.
+  Drawings of detail/worksheet views *can* be clipped at creation; `position` then refers to the
+  view's saved zoom: resulting `pos = position − zoomMin × drawingScale`.
+- API-created drawings always carry the default drawing title; `titleLibraryPartIndex` is not
+  settable and the title element cannot be deleted — switch to "No title" in the UI if the project
+  uses layout texts as titles.
+- Drawings did not refresh after model/2D edits in AC26; delete and recreate the drawing at the same
+  `position` (or test `UpdateDrawings` on the connected build).
+- Layout texts (titles, legends, notes, index rows, date field) can be copied between layouts with
+  `CreateTexts` (style + runs). Put them on a layer that is visible in every combination
+  (layer 1 "Archicad layer"), otherwise they vanish with the user's layer settings.
+- Layout settings: `SetLayoutSettings` with `layoutName`, `customLayoutNumber`,
+  `customLayoutNumbering` to match the existing sheet numbering.
+
+### Dimensions in sections and plans (live session, AC26 / Tapir 1.7.1)
+
+- `CreateAssociativeDimensions` with section-element witnesses returns a GUID for an element that
+  does not exist (ghost) — use `CreateAssociativeDimensionsOnSection` presets instead:
+  `WallSkinBorders` + `skinBorderIndices:[1,2]` gives clean core-face chains;
+  `BeamOrColumnRefLineEndPoints` gives clean chains (coincident points become zero segments, which
+  are not displayed); `BeamOrColumnBoundingBoxCorners` and `WallCompositeFaces` always add midpoints.
+  Clean vertical (height) chains are not possible with presets; level dimensions:
+  `CreateLevelDimensions` since Tapir 1.7.2 (verified).
+- Floor-plan beam witnesses: `special:0`; `inIndex` 1 = end point on the reference line,
+  2 and 4 = begin corners (both sides), 3 = end corner.
+- New dimensions land on the current layer; set `layerIndex` afterwards to a dimension layer that
+  is visible in the view's layer combination.
+
+### Modelling details that affect documentation
+
+- Elements on hidden/locked layers cannot be moved, deleted or modified ("layer is hidden",
+  "not editable"). Showing layers via `CreateLayers overwriteExisting` changes the user's current
+  layer settings — restore them afterwards and say so.
+- `CreateWalls.zCoordinate` is stored as the bottom offset relative to the home story, not as an
+  absolute elevation — set/verify `bottomOffset` explicitly.
+- What a section shows where elements overlap is decided by building-material priority (e.g.
+  masonry 625 beats timber 520). For timber that must stay visible (rafters, sill plates), assign a
+  dedicated building material with higher priority instead of changing the global timber material.
+- A locked Windows screen stops UI automation; API calls keep working.
 
 ## Object and fixture placement: measure, then snap
 

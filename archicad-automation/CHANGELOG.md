@@ -2,6 +2,20 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.5.0] — 2026-10-20
+
+- New section "Documentation views: sections, details, drawings", from a live documentation
+  session (AC26, Tapir 1.7.1): the recommended Detail-tool workflow (details marked in an existing
+  1:50 section, 2D drafting in the Detail window, no separate section per detail), what the API can
+  do there (2D drafting in a detail database, hatches without a closing point, section markers not
+  readable), drawings and layouts (no `clipPolygon` on model-section drawings, default drawing
+  titles, refreshing by recreating, layout texts, sheet numbering), dimensions in sections
+  (`CreateAssociativeDimensionsOnSection` presets instead of ghost section witnesses, beam witness
+  indices, dimension layers) and modelling details that affect documentation (locked layers,
+  `zCoordinate` as bottom offset, building-material priority in sections).
+- Level dimensions in that section updated: `CreateLevelDimensions` exists since 1.7.2.
+- The description names sections, details and drawings on layouts.
+
 ## [3.4.1] — 2026-10-20
 
 - New gotcha and golden rule: element queries work in the **active window's** database.
