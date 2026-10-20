@@ -2,6 +2,16 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.4.1] — 2026-10-20
+
+- New gotcha and golden rule: element queries work in the **active window's** database.
+  `GetElementsByType` without `databases` lists the elements of the active view, so with a
+  section open a floor-plan element is not found (verified AC28, Tapir 1.7.2).
+- New section "Detail and Worksheet markers": read, move, rotate, change layer and delete work;
+  placing a marker and changing its name, ID or clip polygon do not (requested upstream as
+  #1377). `SetDetailsOfElements` reports `success:true` for `detailName`/`detailIdStr` and
+  changes nothing. `RotateElements` takes absolute begin and end points.
+
 ## [3.4.0] — 2026-10-19
 
 Synced to Tapir **1.7.2** (both instances updated through Tapir's own auto-update; live-probed on

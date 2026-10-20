@@ -76,6 +76,7 @@ Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), 
 - **Read-back element wrapping:** `GetDetailsOfElements` / `Get3DBoundingBoxes` / `GetDimensionData` want `{"elementId":{"guid":...}}` items. Multi-element reads ARE stable on current builds — verified live with 30 elements in one call (AC28, 1.5.4-dev) and 25–45 in one call (AC26, 1.5.3). The old "query individually and retry" rule is only a fallback if a specific build/instance shows instability; don't pay the per-call overhead by default.
   - WARNING — **Instance-dependent — probe once per session.** On another AC28 instance (current main build, 2026-08-20) the opposite held: one `GetDetailsOfElements` with **10** elements hung for **>9 minutes** (300 s client timeout, never returned), while **30 single-element** calls completed in **576 ms total**. `Get3DBoundingBoxes` with 40 and even 5 elements timed out the same way. Cause unknown (`floorPlanPolygons` payload is a candidate). Therefore: at session start, time one 1-element and one 10-element read. If the batch is not clearly faster per element, loop single reads — 153 walls verified that way cost under 3 s.
 - **Attribute GUIDs (building materials, composites, surfaces) change per file** → resolve them by name each session. Layer *indices* are stable.
+- WARNING — **Element queries work in the active window's database, not "the floor plan"** (verified AC28, Tapir 1.7.2, 2026-10-20). `GetElementsByType` without `databases` lists the elements of whatever view is active: with a Section window open, a Detail marker on the floor plan was not found and the section's marker was. Check `GetCurrentWindowType` first, and pass `databases` (ids from `GetDatabaseIdFromNavigatorItemId` on the view's navigator item) or switch with `ChangeWindow` before relying on a list or a count. The same script can otherwise act on different elements depending on which window the user clicked last.
 - **Never infer success from a return value or counter** — always confirm with an independent live read-back (`GetElementsByType` count, `GetDetailsOfElements`, or `Get3DBoundingBoxes`).
 - Strict schemas everywhere (`additionalProperties:false`): any unknown field rejects the whole item.
 
@@ -196,6 +197,24 @@ Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), 
 - **Standard recipe for the story grid:** send ALL desired stories in **ONE** `SetStories` call (including names), then a mandatory `GetStories` read-back. Verified live: 6 stories in one call, reliable (AC26, release 1.5.3 — the older "SetStories unreliable" note was the negative-index bug, fixed with #423). With a broken/uncertain grid: stack walls via absolute `CreateWalls.zCoordinate` (grid-independent) — or since release 1.5.4 use `CreateWalls.floorIndex`.
 - Historical note: in releases before 1.5.3, level-change and delete failed with `-2130313112` on projects with a basement (negative story index) — fixed via the story-index correction (PR #423). If you hit that error, the running add-on predates the fix.
 - **Stacking by elevation:** set a wall's absolute base with **`CreateWalls.zCoordinate`** (verified reliable: zCoordinate 7.0 → wall zMin 7.0). Do **NOT** use `ModifyWalls{bottomOffset:0}` afterwards to "stack" — it snaps the wall to the base of its home story and can dump all upper-floor walls onto z equal to the home story. Put height in `CreateWalls.height` and elevation in `zCoordinate` at creation time. (The SetStories level glitch on repeated calls was the negative-index bug fixed in PR #423; re-test on a current build.)
+
+## Detail and Worksheet markers (verified 2026-10-20, Tapir 1.7.2, AC28)
+
+Tested on a Detail marker placed by hand in a section. Worksheet markers share the schema
+(`DetailWorksheetDetails`) but were not tested.
+
+| Action | Command | Result |
+|---|---|---|
+| list | `GetElementsByType {elementType:"Detail"}` (`"Worksheet"`) | markers of the **active** view only; others via `databases` (see Common gotchas) |
+| read | `GetDetailsOfElements` | `basePoint`, `angle`, `markerId`, `detailName`, `detailIdStr`, `isHorizontalMarker`, `isWindowOpened`, `clipPolygon`, `linkData.referredPMViewPoint` |
+| move / rotate | `MoveElements`, `RotateElements` | marker and clip polygon move together. `rotation.beginPoint`/`endPoint` are **absolute** coordinates, not directions from the origin |
+| layer | `SetDetailsOfElements {details:{layerIndex}}` | works |
+| delete | `DeleteElements` | works; Archicad deletes the marker's Detail viewpoint with it (Project Map loses that Detail) |
+| place | - | **no command.** `CreateDetails`/`CreateWorksheets` create independent viewpoint databases without a marker |
+| rename / renumber / reshape | - | **not settable.** WARNING: `SetDetailsOfElements` with `typeSpecificDetails.detailName` or `.detailIdStr` returns `success:true` and changes nothing — read back |
+
+Requested upstream as #1377 (place markers; settable name, ID, clip polygon, marker settings;
+fail instead of silent success). Until then: place and edit Detail/Worksheet markers by hand.
 
 ## New since release 1.5.4 (#436/#437)
 
