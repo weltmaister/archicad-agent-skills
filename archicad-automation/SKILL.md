@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, sections and details (Detail tool workflow: detail markers placed in an existing 1:50 section, 2D drafting in the detail window), drawings on layouts, or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.5.0
+  version: 3.5.1
   author: weltmaister
 ---
 
@@ -87,6 +87,20 @@ attributes or favorites. The full checklist (source hierarchy, discovery questio
 vs. discover) is `references/source-and-office-standard-checklist.md`.
 
 ## Protocol
+
+**Which channel.** Prefer the **Tapir MCP server** when the session has its tools
+(`discovery_list_active_archicads`, `archicad_list_commands`, `archicad_get_command_schema`,
+`archicad_call_tool`): it checks parameters against the schema, logs every request and runs long
+commands as background jobs. Call `discovery_list_active_archicads` first — a freshly started
+server rejects `archicad_call_tool` until discovery has run. Direct HTTP (below) is the fallback.
+An agent whose shell runs in a sandbox (a VM, a container) cannot reach the host's Archicad ports
+at all; give it the MCP server instead of routing HTTP scripts through a desktop-automation shell.
+
+**Visual checks without the GUI.** `SaveCurrentWindowAsImage {imageFilePath, format:"png"}`
+(since 1.7.1) saves what the current Archicad window shows and returns its zoom — verified on
+AC28 with 1.7.2: 0.1 s, no change of the foreground window. Prefer it over desktop screenshots.
+Keep GUI automation for what Tapir cannot do (placing Detail markers, #1377; section marker range),
+and only with the user's consent.
 
 Every Tapir command goes through the official envelope — the bare
 `{"command": "TapirCommand.X"}` form is rejected with error 2002:

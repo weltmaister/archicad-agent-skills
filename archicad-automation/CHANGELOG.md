@@ -2,6 +2,15 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.5.1] — 2026-10-20
+
+- Protocol: which channel to use. Prefer the Tapir MCP server's tools when the session has them
+  (discovery first - a fresh server rejects calls until then); direct HTTP is the fallback; a
+  sandboxed agent shell cannot reach the host's ports and should get the MCP server instead of
+  HTTP scripts run through a desktop-automation shell.
+- Visual checks through `SaveCurrentWindowAsImage` instead of desktop screenshots (verified AC28,
+  1.7.2: 0.1 s, foreground unchanged); GUI automation only for what Tapir cannot do, with consent.
+
 ## [3.5.0] — 2026-10-20
 
 - New section "Documentation views: sections, details, drawings", from a live documentation
