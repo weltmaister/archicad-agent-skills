@@ -2,6 +2,16 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.6.0] — 2026-10-23
+
+- Documentation: sheet sets for trades; drawings on layouts with clipped drawing windows, removing
+  drawing titles, copying library objects (north arrow) between layouts.
+- Static dimension chains and height marks in sections/elevations (the Level Dimension tool is not
+  available there).
+- Protocol: port hijack — if `127.0.0.1:<port>` times out while Archicad is idle, another program
+  may hold that loopback port; Archicad binds `0.0.0.0`, so `127.0.0.2:<port>` still reaches it.
+  With several instances, identify yours by `GetProjectInfo`, not by port.
+
 ## [3.5.1] — 2026-10-20
 
 - Protocol: which channel to use. Prefer the Tapir MCP server's tools when the session has them
