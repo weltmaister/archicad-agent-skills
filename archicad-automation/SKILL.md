@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, sections and details (Detail tool workflow: detail markers placed in an existing 1:50 section, 2D drafting in the detail window), drawings on layouts (clipped drawing windows, removing drawing titles, static dimension chains and height marks in sections), or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.6.0
+  version: 3.7.0
   author: weltmaister
 ---
 

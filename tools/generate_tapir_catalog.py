@@ -58,7 +58,7 @@ Port discovery: scan 19723-19743 and ask each answering port `API.GetProductInfo
 - `→` = response
 - `"A"|"B"` = enum values
 - `A | B` = one of several shapes
-- `(since x.y.z)` = the Tapir version that introduced the command; `[AC27+]` and similar = Archicad versions named in the description
+- `(since x.y.z)` = the first Tapir release that registers the command (taken from the release tags; the version a command is registered with in the source can be one release too early); `[AC27+]` and similar = Archicad versions named in the description
 - Types: float, int, bool, string; other names are the shared types below
 
 ## Cross-cutting notes (verified live)
@@ -160,6 +160,24 @@ def old_notes(path: Path) -> dict[str, list[str]]:
     return notes
 
 
+def first_releases(checkout: Path, tag: str) -> dict[str, str]:
+    """The first release tag that registers each command. The version a command is registered with
+    is the one main carried when its pull request was written, which can be a release too early."""
+    tags = subprocess.run(["git", "-C", str(checkout), "tag", "--list", "--sort=v:refname"],
+                          capture_output=True, text=True, check=True).stdout.split()
+    tags = [t for t in tags if re.fullmatch(r"\d+\.\d+\.\d+", t)]
+    tags = tags[:tags.index(tag) + 1] if tag in tags else tags
+    first: dict[str, str] = {}
+    for t in tags:
+        try:
+            source = git_show(checkout, t, "archicad-addon/Sources/AddOnMain.cpp")
+        except subprocess.CalledProcessError:
+            continue
+        for name in set(re.findall(r"RegisterCommand<\s*(\w+?)(?:Command)?\s*>", source)):
+            first.setdefault(name, t)
+    return first
+
+
 def archicad_versions(description: str) -> str:
     found = re.findall(r"Archicad (\d{2})(\+| or later| and later|)", description)
     return f" [AC{found[0][0]}+]" if found and found[0][1] else ""
@@ -175,6 +193,7 @@ def main() -> int:
     groups = js_value(git_show(args.checkout, args.tag, f"{DOCS}/command_definitions.js"), "gCommands")
     shared = js_value(git_show(args.checkout, args.tag, f"{DOCS}/common_schema_definitions.js"), "gSchemaDefinitions")
     notes = old_notes(args.out)
+    released = first_releases(args.checkout, args.tag)
     count = sum(len(g["commands"]) for g in groups)
 
     out = [HEADER.format(version=args.tag, count=count), "## Shared Types", ""]
@@ -187,7 +206,8 @@ def main() -> int:
         for command in group["commands"]:
             description = " ".join(command.get("description", "").split())
             out.append(f"### {command['name']}")
-            out.append(f"# {description} (since {command.get('version', '?')}){archicad_versions(description)}")
+            since = released.get(command["name"], command.get("version", "?"))
+            out.append(f"# {description} (since {since}){archicad_versions(description)}")
             kept = notes.get(command["name"], [])
             carried += len(kept)
             out += kept

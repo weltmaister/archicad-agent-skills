@@ -15,7 +15,7 @@ All commands go through the `API.ExecuteAddOnCommand` envelope (see SKILL.md "Pr
 3. **Field probes** for version-sensitive fields (create a probe element far outside the model, read back, delete): `CreateWalls.arcAngle` → `4002 additionalProperties` means **< 1.5.4**; `GetStories` stories without `height` → **pre-#434**; `GetDetailsOfElements` wall details without `begThickness` → **<= 1.5.3**.
 4. Cache the result as a per-instance command/field matrix in the project folder and consult it instead of re-probing.
 
-Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1** (2026-10-15), **1.7.2 = current** (2026-10-19; own sections below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
+Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1** (2026-10-15), **1.7.2** (2026-10-19), **1.7.3 = current** (2026-10-26; own sections below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
 
 | Feature | Releases <= 1.5.3 | Since release 1.5.4 (2026-07-21) |
 |---|---|---|
@@ -223,6 +223,48 @@ These fields exist since release 1.5.4; older releases return `4002`. **Verified
 - **`SetDetailsOfElements` → `drawIndex`** (#436): repositions display order via `ACAPI_Grouping_Tool` (direct `drawIndex` set is a Graphisoft bug and silently ignored). Known limits: Door/Window/Skylight min level 7 (host-based stepping for 8–14); generic `Opening` immovable; multiple openings in the same host in one batch end at the same level.
 - **`GetDetailsOfElements` → `floorPlanPolygons`** (#437): optional per-element output — the cut-fill contour polygons as drawn in the floor plan, works for elements on any story (`allStories`) without switching the active view. Useful for outline extraction / overlay proofs.
 - **`ChangeWindow` → `storyIndex`** (#437): documented to switch the active story by index with `windowType:'FloorPlan'`, but a silent no-op on every release up to 1.6.0. **Works since 1.7.0** (#752, see the 1.7.0 section). `ChangeWindow {navigatorItemId}` is AC27+ only; AC25/AC26 reject it.
+
+## New since release 1.7.3 (2026-10-26, weekly patch with 106 new commands)
+
+Live-verified on AC26 and AC28 (GER, 2026-10-26, untitled projects, installed through Tapir's own
+update) with the community test runner's checks:
+
+- **Element ID is settable** (#906): `SetDetailsOfElements {details:{id:"W-1"}}` sets it and
+  `GetDetailsOfElements` reads it back in `id`; the `Create*` commands take `id` as well.
+- **`FilterElements` filters by type, layer and story** (#917): `elementTypes`, `layerIndices`,
+  `floorIndices` next to the flag `filters`; within one criterion any value matches.
+- **Static witness points** (#1203): a `CreateAssociativeDimensions` witness point can be
+  `{"coordinate": {x, y}}` instead of an element. Such points read back with `witnessForm:"Fix"`
+  and stay put when the dimensioned element moves.
+- **`MeasureTexts`** (#1129) measures a text before placing it: `length` in mm on paper, or in
+  model units with `inModelUnits:true` (2.5 mm "Hello Tapir": 15.9 mm on paper, 1.59 m at 1:100).
+  WARNING: each text needs `fontIndex` or `fontName` although the schema marks both optional;
+  `fontName` must be the name of a font as Archicad lists it (look it up with `GetFontsByName`),
+  not any Windows font name.
+- **`GetCurrentWindowDrawingScale`** returns the active window's scale denominator (100.0 for
+  1:100) without a saved view; `SetCurrentWindowDrawingScale` sets it.
+- **Stair details are readable** (#826): `GetDetailsOfElements` returns `type:"Stair"` with details.
+- **Still open in 1.7.3:** the `DeleteElements` nonexistent-guid trap (#749 — the fix #751 was tested
+  on its build 27dbf58 and is due to merge), `CreateStairs.treadDepth` (#425/#750).
+- **New or changed (release notes, not verified live - probe before relying on them):**
+  - `DeleteNavigatorItems` deletes independent worksheets and details of the Project Map (#1050);
+    marker-linked ones cannot be deleted that way. Placing Detail markers is still missing (#1377).
+  - `ChangeWindow` accepts a `databaseId` without `windowType` (#1385); `GetNavigatorParentItems`
+    and child counts in `GetNavigatorItemTree` (#1339).
+  - Layouts and drawings: master layout in `Get/SetLayoutSettings` (#825), layout position in its
+    subset at `CreateLayout` (#761), `GetLayoutSubsetSettings` (#1112), drawing printable border
+    (#1397), `GetDrawingContentBoxes` (#1131).
+  - Zones: reduction polygons (`GetZoneReductions`), automatic zone labeling
+    (`SetZoneLabelingSettings`), the reference point of automatic zones in `GetDetailsOfElements`.
+  - Openings (AC29-30): `GetOpeningDetails`/`SetOpeningDetails`; reveal and `revealDepthOffset` of
+    windows and doors in `GetDetailsOfElements` (#898).
+  - `SolveStairBaseline` (#1214), `GetHierarchicalElementOwners` (#1211), project data store in
+    add-on objects (`Get/Set/DeleteProjectData`), `GetCurrentViewImage` (3D/rendering image without
+    a file), `DeleteSelectedElements`, 3D styles and 3D window settings, structure display.
+  - `DeleteElements` deletes the zones of a call before the other elements (#904).
+  - The full list with schemas is in `tapir-full-command-catalog.md` (426 commands). Its
+    `(since x.y.z)` labels now name the first release that really contains a command: 40 of the
+    commands new in 1.7.3 are registered with "1.7.2" in Tapir's own reference.
 
 ## New since release 1.7.2 (2026-10-19, weekly patch with 43 new commands)
 

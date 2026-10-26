@@ -2,6 +2,19 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.7.0] — 2026-10-26
+
+Synced to Tapir **1.7.3** (both instances updated through Tapir's own update; live-probed on AC26
+and AC28 with the community test runner's checks).
+
+- Full command catalog regenerated: 426 commands (106 new in 1.7.3). The generator now labels each
+  command with the first release that really contains it, from the release tags: 40 of the new
+  commands carry "1.7.2" in Tapir's own reference although 1.7.2 does not have them.
+- New section "New since release 1.7.3": settable Element ID, `FilterElements` by type/layer/story,
+  static dimension witness points, `MeasureTexts` (needs `fontIndex` or a listed `fontName`),
+  `GetCurrentWindowDrawingScale`, readable stair details - all verified; the rest of the release
+  notes marked as not verified.
+
 ## [3.6.0] — 2026-10-23
 
 - Documentation: sheet sets for trades; drawings on layouts with clipped drawing windows, removing
