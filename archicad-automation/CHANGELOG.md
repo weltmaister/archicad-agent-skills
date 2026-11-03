@@ -2,6 +2,17 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [3.8.0] — 2026-11-03
+
+Synced to Tapir **1.8.0** (both instances updated; live-probed on AC26 and AC28 with the community
+test runner's checks).
+
+- Full command catalog regenerated: 641 commands.
+- New section "New since release 1.8.0": the `DeleteElements` nonexistent-guid fix, `MeasureTexts`
+  font requirement and `GetElementAtCoordinate` misses verified; `z` must be at or above a slab's
+  top surface. Warnings for what is still open: `CreateStairs.treadDepth` (fix after 1.8.0) and the
+  `GetElementsInDrawOrder` crash.
+
 ## [3.7.0] — 2026-10-26
 
 Synced to Tapir **1.7.3** (both instances updated through Tapir's own update; live-probed on AC26

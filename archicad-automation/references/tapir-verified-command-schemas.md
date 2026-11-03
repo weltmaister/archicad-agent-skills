@@ -15,7 +15,7 @@ All commands go through the `API.ExecuteAddOnCommand` envelope (see SKILL.md "Pr
 3. **Field probes** for version-sensitive fields (create a probe element far outside the model, read back, delete): `CreateWalls.arcAngle` → `4002 additionalProperties` means **< 1.5.4**; `GetStories` stories without `height` → **pre-#434**; `GetDetailsOfElements` wall details without `begThickness` → **<= 1.5.3**.
 4. Cache the result as a per-instance command/field matrix in the project folder and consult it instead of re-probing.
 
-Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1** (2026-10-15), **1.7.2** (2026-10-19), **1.7.3 = current** (2026-10-26; own sections below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
+Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), **1.5.5** (+ #449 Morph, #458–#462), **1.5.6/1.5.7/1.5.8/1.5.9/1.6.0/1.7.0** (own sections below), **1.7.1** (2026-10-15), **1.7.2** (2026-10-19), **1.7.3** (2026-10-26), **1.8.0 = current** (2026-11-02; own sections below). Tapir's own auto-update (since 1.7.0) offers new releases at Archicad start; **identify each instance by `API.GetProductInfo`, never by its port** — ports follow the start order. Since 2026-10 upstream releases **weekly** (Mondays; the first release of a month is a minor, e.g. 1.7.0, the others patches 1.6.x) — expect frequent version bumps and probe per instance. "<= 1.5.3" = all older releases:
 
 | Feature | Releases <= 1.5.3 | Since release 1.5.4 (2026-07-21) |
 |---|---|---|
@@ -223,6 +223,44 @@ These fields exist since release 1.5.4; older releases return `4002`. **Verified
 - **`SetDetailsOfElements` → `drawIndex`** (#436): repositions display order via `ACAPI_Grouping_Tool` (direct `drawIndex` set is a Graphisoft bug and silently ignored). Known limits: Door/Window/Skylight min level 7 (host-based stepping for 8–14); generic `Opening` immovable; multiple openings in the same host in one batch end at the same level.
 - **`GetDetailsOfElements` → `floorPlanPolygons`** (#437): optional per-element output — the cut-fill contour polygons as drawn in the floor plan, works for elements on any story (`allStories`) without switching the active view. Useful for outline extraction / overlay proofs.
 - **`ChangeWindow` → `storyIndex`** (#437): documented to switch the active story by index with `windowType:'FloorPlan'`, but a silent no-op on every release up to 1.6.0. **Works since 1.7.0** (#752, see the 1.7.0 section). `ChangeWindow {navigatorItemId}` is AC27+ only; AC25/AC26 reject it.
+
+## New since release 1.8.0 (2026-11-02, monthly minor release)
+
+Live-verified on AC26 and AC28 (GER, 2026-11-03, untitled projects, Archicad in demo mode) with
+the community test runner's checks from the 1.8.0 tag:
+
+- **`DeleteElements` with a nonexistent guid is fixed** (#749/#751): the unknown guid gets its own
+  failed result and no longer rolls back a real element listed before it. The nonexistent-guid
+  trap described in the 1.6.0 section applies to releases up to 1.7.3 only.
+- **`MeasureTexts` refuses a text without `fontIndex` or `fontName`** (#1551): the schema now
+  requires one of them; the call fails with 4002 instead of measuring with an undefined font.
+- **`GetElementAtCoordinate` reports a miss as `found:false`** (#1550). WARNING: it hits a slab only
+  when `z` is **at or above the slab's top surface**, like a click from above; a `z` inside the slab
+  misses. Without `z` it looks at the story level and 1 mm above it, so it misses every slab whose
+  top is above that (verified: a slab with its top at +0.1 m is found with `z:0.2`, not with `z`
+  omitted, 0, 0.001 or -0.1). Pass `z` = the slab's `zMax` from `Get3DBoundingBoxes`.
+- **Still open in 1.8.0:**
+  - `CreateStairs.treadDepth` is still ignored (#425). The fix #750 was merged after the release
+    and ships with the next one.
+  - WARNING — **`GetElementsInDrawOrder` crashes Archicad** on every version up to 1.8.0 (#1548:
+    the draw order walk runs without `DrawOrderInit`). Do not call it. The fix #1571 is tested on
+    AC26, AC28 and AC29 and waits for a maintainer.
+- **New (release notes, not verified live - probe before relying on them):**
+  - Property objects: `GetPropertyObjectsOfElements`, `GetDescriptorsOfElements`,
+    `Get/SetLinkedPropertyObjectsOfElements`; `ModifyPropertyValueOfElements` sets one value on
+    several elements, all or nothing (AC27+).
+  - `GetElementsByClassification`; favorites: `GetFavoriteDetails`, `GetFavoriteFolders`;
+    dimension creation commands take `favoriteName` for text size and frame.
+  - Hierarchical editing: `EditHierarchicalElement`, `FinishHierarchicalEditing`,
+    `GetEditModeState`; `MergeElements`, `UnmergeElements`, `GetMergedElements`;
+    `RefreshElements`; `GetVisibleSkinStatus`; `GetHotlinkOwnersOfElements`.
+  - Texts: `ChangeTextContent` and `rawText` of text and label content.
+  - `SetGraphicOverrideRuleOrder`; `Get/SetAutoIntersect`; the Zones page of
+    `Get/SetProjectPreferences`; Project Info groups (AC30).
+  - `MoveNavigatorItem` reorders within a folder and no longer reports false successes;
+    `DeleteNavigatorItems` reports a refused delete as a failure.
+  - The full list with schemas is in `tapir-full-command-catalog.md` (641 commands, 215 more than
+    1.7.3).
 
 ## New since release 1.7.3 (2026-10-26, weekly patch with 106 new commands)
 
