@@ -19,9 +19,15 @@ hand-tested payload shapes, exact error codes, known crash traps, and **per-rele
 gates** (behavior differs meaningfully between Tapir releases — the skills tell you which
 fields exist since which release and how to probe the connected instance instead of assuming).
 
+Before writing, `archicad-automation` looks things up with `scripts/ac_lookup.py`: the command
+schema of the exact Tapir release, whether the Archicad API can do it at all, and — for new or
+domain-heavy workflows — the official Graphisoft Archicad Help of the version and language in use.
+The Help index is built locally on first use (`ac_lookup.py build-help --ac 28 --lang GER`) and is
+not part of this repository.
+
 ## Requirements
 
-- Archicad 25–29 (Windows or macOS) with the [Tapir add-on](https://github.com/ENZYME-APD/tapir-archicad-automation/releases) installed — recent releases (≥ 1.5.4) strongly recommended
+- Archicad 25–30 (Windows or macOS) with the [Tapir add-on](https://github.com/ENZYME-APD/tapir-archicad-automation/releases) installed — the skill is synced to Tapir 2.0.0; older releases work with the version gates it documents
 - An open Archicad project (the JSON port only listens while a project is open)
 - An agent runtime that can reach `localhost` of the Archicad host (ports 19723–19743)
 

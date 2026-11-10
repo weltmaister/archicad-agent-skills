@@ -161,7 +161,7 @@ Known variance (verified live). Release gates: **1.5.4** (roll-up #428–#457), 
 - Optional: `totalHeight`, `flightWidth`, `stepNum` (int >=1), `riserHeight`, `treadDepth`
 - WARNING — **HARD LIMIT (all releases <= 1.5.8, issue #425): `stepNum`, `treadDepth` and `riserHeight` are accepted but IGNORED** — the run length is auto-computed regardless of the sent values AND regardless of the baseline length. A straight source run **shorter** than the auto length cannot be matched — it overshoots. A community experiment documented in #425 (rules pinning via `API_StairRulesData`, following the maintainer's recipe) found that **`treadDepth` pinning works precisely** (run = N × treadDepth) while **`riserHeight` pinning does not take effect** (three iterations, including releasing the pitch rule and a +/-0.1% tolerance band) → joint run-length control remains an open issue; see #425 for status.
 - **Pre-check BEFORE placing a straight stair:** estimate the expected run length — `runLength ~ (ceil(totalHeight / 0.17) - 1) * 0.26` (e.g. totalHeight 3.25 → ~19 steps → ~4.65 m). Compare against the run length available in the source plan: **if it does not fit, choose an L/U baseline (only on release >= 1.5.4, see above) or a 2D substitute right away** — do NOT place first. After placing, check the footprint via `Get3DBoundingBoxes` against the target space (the bbox is footprint-only, zMax=0 — verify the 3D height separately).
-- **No `ModifyStairs`** — a stair's geometry/step parameters cannot be edited after creation. Workaround: delete + recreate. (Generic `MoveElements`, `SetDetailsOfElements` layer, classifications/properties, delete still apply.)
+- **`ModifyStairs` since Tapir 2.0.0** (verified AC26 + AC28: `totalHeight` 2.8 → 3.0 reads back, risers re-laid out). Top-level key `stairsWithDetails`, fields directly on each item (no `details` wrapper): `flightWidth`, `totalHeight`, `stepNum`, `riserHeight`, `treadDepth`, the locks, finish/tread flags, walking line, rules. Before 2.0.0: no ModifyStairs — delete and recreate.
 - `Get3DBoundingBoxes` for a stair returns only the footprint (zMax=0) — 3D height not verifiable that way.
 
 ## Dimensions (all associative, element-bound)
@@ -210,7 +210,7 @@ Tested on a Detail marker placed by hand in a section. Worksheet markers share t
 | move / rotate | `MoveElements`, `RotateElements` | marker and clip polygon move together. `rotation.beginPoint`/`endPoint` are **absolute** coordinates, not directions from the origin |
 | layer | `SetDetailsOfElements {details:{layerIndex}}` | works |
 | delete | `DeleteElements` | works; Archicad deletes the marker's Detail viewpoint with it (Project Map loses that Detail) |
-| place | - | **no command.** `CreateDetails`/`CreateWorksheets` create independent viewpoint databases without a marker |
+| place | - | **`CreateDetailMarkers` / `CreateWorksheetMarkers` since 2.0.0** (verified AC26 + AC28, also inside a section window; creates the viewpoint). `CreateDetails`/`CreateWorksheets` still create independent viewpoint databases without a marker |
 | rename / renumber / reshape | - | **not settable.** WARNING: `SetDetailsOfElements` with `typeSpecificDetails.detailName` or `.detailIdStr` returns `success:true` and changes nothing — read back |
 
 Requested upstream as #1377 (place markers; settable name, ID, clip polygon, marker settings;
@@ -286,7 +286,7 @@ update) with the community test runner's checks:
   on its build 27dbf58 and is due to merge), `CreateStairs.treadDepth` (#425/#750).
 - **New or changed (release notes, not verified live - probe before relying on them):**
   - `DeleteNavigatorItems` deletes independent worksheets and details of the Project Map (#1050);
-    marker-linked ones cannot be deleted that way. Placing Detail markers is still missing (#1377).
+    marker-linked ones cannot be deleted that way. Placing Detail markers: `CreateDetailMarkers` since 2.0.0 (#1377, verified).
   - `ChangeWindow` accepts a `databaseId` without `windowType` (#1385); `GetNavigatorParentItems`
     and child counts in `GetNavigatorItemTree` (#1339).
   - Layouts and drawings: master layout in `Get/SetLayoutSettings` (#825), layout position in its
@@ -484,7 +484,7 @@ Large documentation/layout command set. On older releases → `4002`/`4010`. The
   - WARNING — **Schema change since release 1.5.9:** `polygonCoordinates` is now REQUIRED even for the single-plane form — `pivotLine`+`angle` alone (valid on 1.5.6-1.5.8) returns `4002 'required' on #/roofsData/0`. `pivotLine`+`polygonCoordinates` together is accepted (creates a single-plane roof). Probe per build before use.
   - **`ModifyRoofs` — roof geometry is effectively immutable after creation:** on <= 1.5.8 builds, `level` was accepted and silently ignored (`succeeded:true`, bbox unchanged); since release 1.5.9, single-plane roofs at least get an honest per-item error `-2130312313 "Only multi-plane roofs are supported."` (live 2026-08-30). Correction = delete + recreate.
 - **`CreateMeshes`** exists and works — usable for terrain source layers (see the full catalog for the schema).
-- **No `CreateRailings`** — railings cannot be created via Tapir. Workaround: model as a thin wall, a morph, or a library object until such a command exists.
+- **`CreateRailings` since Tapir 1.8.0** (verified AC26 + AC28 with 2.0.0): `railingsData[{coordinates[], floorIndex, bottomOffset, height, favoriteName|templateElementId}]`. Posts, rails and panels come from the favorite, a template railing or the tool default. Linking a railing to a slab or stair edge is not possible through the Archicad API (Tapir "API limits").
 - WARNING — **AC29 issue (#481, unresolved on <= 1.5.8):** on Archicad 29 (observed with 1.5.5), `CreateWindows`/`CreateDoors` can return a **GUID without any element being created** (silent, no crash, also for single items, also with a valid favorite). A drastic proof of the meta rule: **NEVER infer success from the return value — always cross-read via `GetElementsByType` count / `GetDetailsOfElements`.** (A fix creating windows/doors from the floor-plan database, #559, is merged for the release after 1.5.8.)
 
 ## Read-back (GetDetailsOfElements)

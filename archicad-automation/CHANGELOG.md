@@ -2,6 +2,32 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [4.0.0] — 2026-11-10
+
+Synced to Tapir **2.0.0** (789 commands, 148 new) and a new look-up step before writing.
+Every changed statement below was verified live on AC26 and AC28 (GER) with Tapir 2.0.0 in an
+empty project; probe elements were deleted afterwards.
+
+- **New `scripts/ac_lookup.py`** (standard library only): `cmd`/`find` read the command schemas of
+  the exact Tapir release from its own `docs/commands.json` and add the verified notes; `limits`
+  searches Tapir's "API limits" page; `help` searches a local full-text index of the official
+  Graphisoft Archicad Help of a given version and language (`build-help --ac 28 --lang GER`). The
+  data cache lives outside the skill (`~/.cache/archicad-lookup/`); the copyrighted Help text is
+  never part of the skill.
+- **Operating sequence step 5 is now "Look up before you write"**: command schema → API limits →
+  for new or domain-heavy workflows the Archicad Help of the version in use → verified gotchas.
+- **Corrected "not possible" statements** (breaking for agents that relied on the old advice):
+  - Source Detail markers: `CreateDetailMarkers` (also inside a section window, creates the
+    viewpoint) and `CreateWorksheetMarkers`; `ModifyDetailMarkers` except the boundary `penIndex`
+    (#2470).
+  - Sections/elevations: `Get/SetSectionsAndElevationsDetails` set horizontal and vertical range;
+    `CreateElevations`.
+  - `ModifyStairs` exists (fields directly on the item, no `details` wrapper).
+  - `CreateRailings` exists (since 1.8.0).
+  - `GetPublisherSets` and `GetSchedules` list sets and schedules; adding to a set and reading
+    schedule rows remain impossible in the Archicad API.
+- Full command catalog regenerated for 2.0.0.
+
 ## [3.8.0] — 2026-11-03
 
 Synced to Tapir **1.8.0** (both instances updated; live-probed on AC26 and AC28 with the community

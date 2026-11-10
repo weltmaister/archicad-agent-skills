@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, sections and details (Detail tool workflow: detail markers placed in an existing 1:50 section, 2D drafting in the detail window), drawings on layouts (clipped drawing windows, removing drawing titles, static dimension chains and height marks in sections), or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 3.8.0
+  version: 4.0.0
   author: weltmaister
 ---
 
@@ -67,7 +67,26 @@ a fake Archicad that mirrors live-measured behavior (`python -m unittest discove
    machines run different Tapir builds — never assume the documented catalog matches the
    connected instance. See `references/tapir-verified-command-schemas.md` → "Version variance".
 4. **Inspect before you mutate**: stories, layers, attributes, favorites, existing elements.
-5. **Load the references** (below) instead of guessing field names.
+5. **Look up before you write** (`scripts/ac_lookup.py`, standard library only; its data cache lives
+   outside the skill in `~/.cache/archicad-lookup/`, override with `AC_LOOKUP_DATA`):
+   1. `ac_lookup.py cmd <Command> --tapir <connected version>` — the command's schema from Tapir's
+      own `commands.json` of exactly that release, the version it was added in, and our verified
+      notes from `references/tapir-verified-command-schemas.md`. `find <words>` when the name is
+      unknown. Never guess field names; the catalog file is the offline fallback.
+   2. `ac_lookup.py limits <words>` — whether the Archicad API can do it at all (Tapir's "API
+      limits" page, checked against the DevKits AC25–AC30). If not, say so and offer the
+      workaround the page names instead of improvising.
+   3. **For a workflow that is new or domain-heavy** (details, sections/elevations, layouts and
+      publishing, stairs and railings, zones, IFC, renovation, design options):
+      `ac_lookup.py help "<words>" --ac <Archicad version> --lang <GER|INT|…>` — the matching pages
+      of the official Graphisoft Archicad Help **of the version and language in use**, with link and
+      excerpt (`--full` for the page text). Follow how Archicad itself models the task; Help terms
+      are the user's menu names. Build the index once per version: `build-help --ac 28 --lang GER`.
+   4. Then the verified gotchas below and in the references. Routine, already-verified calls need
+      only steps 1 and 4.
+
+   The Graphisoft Help text is copyrighted: keep the index local, quote only short excerpts with
+   their link, never commit it.
 6. Classify missing parameters: discoverable from the file / inferable / genuinely user-required.
    Ask concise questions only for the last group.
 7. Present non-trivial mutation plans before executing.
@@ -110,6 +129,13 @@ vs. discover) is `references/source-and-office-standard-checklist.md`.
 `archicad_call_tool`): it checks parameters against the schema, logs every request and runs long
 commands as background jobs. Call `discovery_list_active_archicads` first — a freshly started
 server rejects `archicad_call_tool` until discovery has run. Direct HTTP (below) is the fallback.
+**The MCP server knows only the commands of the `multiconn_archicad` release it was built with**,
+which lags behind Tapir: `archicad_list_commands`/`archicad_get_command_schema` answer "not found"
+for newer commands and `archicad_call_tool` cannot send them (seen: MCP 0.6.8 / multiconn 0.9.7
+lacks the Tapir 2.0.0 commands `CreateDetailMarkers`, `ModifyStairs`, `GetPublisherSets`,
+`Get/SetSectionsAndElevationsDetails`). Division of labour: the MCP for commands it lists (schema
+validation, logging, jobs); `ac_lookup.py` for the schema of the connected Tapir release, the API
+limits and the Archicad Help; direct HTTP for commands the MCP does not list yet.
 An agent whose shell runs in a sandbox (a VM, a container) cannot reach the host's Archicad ports
 at all; give it the MCP server instead of routing HTTP scripts through a desktop-automation shell.
 
@@ -118,8 +144,8 @@ at all; give it the MCP server instead of routing HTTP scripts through a desktop
 AC28 with 1.7.2: 0.1 s, no change of the foreground window. Prefer it over desktop screenshots.
 On AC26/1.7.1 it worked for layout windows only (floor plan and section windows failed: "cannot
 be saved as a picture") — check views through their drawing on a layout (`FitInWindow` on the
-drawing, then save the layout image). Keep GUI automation for what Tapir cannot do (placing
-Detail markers, #1377; section marker range), and only with the user's consent.
+drawing, then save the layout image). Keep GUI automation for what Tapir cannot do — check
+`ac_lookup.py limits <words>` first — and only with the user's consent.
 
 Every Tapir command goes through the official envelope — the bare
 `{"command": "TapirCommand.X"}` form is rejected with error 2002:
@@ -160,8 +186,9 @@ check each item for an `elementId` vs. an `error` object.
 
 | File | Use for |
 |---|---|
+| `scripts/ac_lookup.py` | **Look-up tool** (step 5 above): command schemas per Tapir release, API limits, the official Archicad Help per version/language. |
 | `references/tapir-verified-command-schemas.md` | **Read first.** Hand-verified field names, gotchas, and version gates for the most-used commands. The authority when unsure about a payload. |
-| `references/tapir-full-command-catalog.md` | Complete command list with input/response schemas. Breadth; anything not in the verified file. |
+| `references/tapir-full-command-catalog.md` | Complete command list (Tapir 2.0.0, 789 commands) with input/response schemas — offline fallback for `ac_lookup.py cmd`. |
 | `references/tapir-http-direct-protocol.md` | Protocol details, error semantics, command family overview. |
 | `references/modeling-rule-catalog.md` + `scripts/modeling_rules.py` | Fixed modelling rules for `build_from_model.py`: rule IDs with source/implementation/check, role table, situational defaults, live-proven API limits. |
 | `references/wall-reference-lines-and-opening-placement.md` | Wall reference-line direction rules, clean junctions, opening placement. |
@@ -262,15 +289,19 @@ Details are **not** separate sections. The workflow is the Archicad Detail tool:
 
 Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint with Model Source".
 
-### What the API can and cannot do here (live session, AC26 / Tapir 1.7.1)
+### What the API can and cannot do here (Tapir 2.0.0, verified AC26 + AC28)
 
-- **No command places a source Detail marker** or rebuilds a detail (requested upstream as #1377;
-  what works on existing markers is in `tapir-verified-command-schemas.md`, "Detail and Worksheet
-  markers"). `CreateDetails` only makes
-  *independent* detail databases without model source. Placing the marker in the 1:50 section is a
-  manual step (or UI automation with the user's consent) — say so and ask for it; do not fall back
-  to a separate section. A reference to an existing (old 2D) detail sheet can be drawn as 2D
-  (frame + "D04" text) in the view.
+- **Source Detail markers are scriptable since Tapir 2.0.0** (#1377): open the 1:50 section window
+  (`GetNavigatorItemTree {navigatorMapId:"ProjectMap"}` → `GetDatabaseIdFromNavigatorItemId` →
+  `ChangeWindow {windowType:"Section", databaseId}`), then `CreateDetailMarkers` with a
+  `clipPolygon` in that window's coordinates (x along the section line, y = absolute height; no
+  closing point), `markerCoordinate`, `name`, `id`. Verified on AC26 and AC28: the marker reads
+  back as element type `Detail` and a new Detail viewpoint appears in the Project Map.
+  `CreateWorksheetMarkers` works the same way. `ModifyDetailMarkers` changes name, id, clip
+  polygon, line type, angle, horizontal flag and marker pen — **but not the boundary `penIndex`**
+  (fails with -2130312311 on 2.0.0, #2470). Rebuilding a detail from its source is still a UI step.
+  `CreateDetails` remains the command for *independent* detail databases without model source.
+  A reference to an existing (old 2D) detail sheet can still be drawn as 2D (frame + "D04" text).
 - Once the marker exists, the detail is fully scriptable: find the `DetailDrawingItem` in the
   Project Map, `GetDatabaseIdFromNavigatorItemId`, `ChangeWindow {windowType:"Details", databaseId}`,
   then use the 2D create commands (`CreateLineElements`, `CreateArcs`, `CreateCircles`,
@@ -287,8 +318,14 @@ Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint 
   polygon into a model window; assign the old texts and dimensions (`GetDimensionData` gives exact
   witness coordinates) to the old views and re-measure every value from the current model instead
   of copying numbers.
-- Section markers (`CutPlane`) are not readable or editable via the API ("Not yet supported element
-  type"): marker length and vertical range are UI-only — but the drawing can be clipped (below).
+- **Section and elevation settings are scriptable since Tapir 2.0.0:** `CreateSections` /
+  `CreateElevations` (with `depth`, `name`, `id`, optional `details`), `GetSectionsAndElevationsDetails`
+  and `SetSectionsAndElevationsDetails` (pens, line type, `horizontalRange`/`verticalRange`
+  `Infinite|Limited|ZeroDepth|FitToZoneRange`, `verticalRangeMin/Max`, model effects, story handles,
+  markers). Verified on AC26 and AC28: switching both ranges to `Limited` reads back as set.
+  Name/id of existing ones: `ModifySections`. Check the Help page "Horizontale/vertikale
+  Begrenzungen des Schnittes" — the vertical range only exists for *source* section markers.
+  Drawings can still be clipped on the layout (below).
 
 ### Drawings and layouts (live session, AC26 / Tapir 1.7.1)
 
@@ -324,9 +361,12 @@ Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint 
   selecting texts by content, match precisely (a prefix match caught a second, older text).
 - Layout settings: `SetLayoutSettings` with `customLayoutNumber`, `customLayoutNumbering`;
   `layoutName` was accepted and ignored on AC26 — rename in the UI.
-- `PublishPublisherSet` only publishes an existing publisher set (`API.GetPublisherSetNames`
-  lists them); new layouts are not in any set — PDF export of new sheets is a UI step unless the
-  user adds them to a set.
+- `PublishPublisherSet` only publishes an existing publisher set. List the sets with
+  `GetPublisherSets` (since 2.0.0: name, root navigator item, saved output path — verified AC26 and
+  AC28; `API.GetPublisherSetNames` gives names only). Adding a layout to a set is **not possible**
+  through the Archicad API (Tapir's "API limits" page) — new sheets need the user to add them in the
+  Organizer once. Interactive Schedules are listed by `GetSchedules` (since 2.0.0, verified);
+  their rows cannot be read — build the list from `GetElementsByType` + property values.
 
 ### Dimensions in sections and plans (live session, AC26 / Tapir 1.7.1)
 
