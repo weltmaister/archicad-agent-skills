@@ -2,6 +2,20 @@
 
 SemVer; `metadata.version` in the SKILL.md frontmatter mirrors the current version.
 
+## [4.0.1] — 2026-11-14
+
+Notes from a working session (AC28 GER, Tapir 1.8.1 dev build), each observed once and marked as
+such; the `UpdateZones.zones` and multi-line text statements are checked against the Tapir source.
+
+- Golden rule: `UpdateZones` without `zones` updates every zone; `zones` since 2.0.0.
+- Recipe for recreating a single zone (custom properties are lost silently).
+- Recipe "place a drawing on a layout": default layer, title, scale in autotext, numbering, `MoveElements`.
+- Multi-line texts fail up to 2.0.0 (#2461, fixed by #2462 after the release); `\r` vs `\n`.
+- Hidden layer: `SetDetailsOfElements` now reports the failure.
+- Graphic override rules vs. renovation display, pen 0, `gs_back_pen`; `CreatePolylines` line type;
+  `ModifyDoors` width shifts the door.
+- New reference `schedule-scheme-xml.md`.
+
 ## [4.0.0] — 2026-11-10
 
 Synced to Tapir **2.0.0** (789 commands, 148 new) and a new look-up step before writing.

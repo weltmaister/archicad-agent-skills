@@ -3,7 +3,7 @@ name: archicad-automation
 description: "Use when operating Archicad through the Tapir add-on's JSON API: inspecting an open project, inferring office standards from the open file's favorites/attributes/properties, creating or modifying BIM elements (walls, slabs, openings, roofs, zones, stairs), reading element details, placing associative dimensions, managing layers and attributes, creating views and layouts, sections and details (Detail tool workflow: detail markers placed in an existing 1:50 section, 2D drafting in the detail window), drawings on layouts (clipped drawing windows, removing drawing titles, static dimension chains and height marks in sections), or publishing. Talks HTTP to the Archicad host on ports 19723-19743. Pairs with abstracting-building-models when drawings or scans must first be interpreted."
 license: MIT
 metadata:
-  version: 4.0.0
+  version: 4.0.1
   author: weltmaister
 ---
 
@@ -204,6 +204,7 @@ check each item for an `elementId` vs. an `error` object.
 | `references/overlay-*.md` + `scripts/calibrated_plan_overlay.py`, `scripts/proof_plan_layers.py` | Calibrated source-vs-model overlay proofs. |
 | `references/object-triage-and-opening-handing-notes.md` | Separating model objects from annotation libparts. |
 | `references/repair-vs-rebuild-decision.md` | When to keep patching vs. delete/recreate a group vs. rebuild. |
+| `references/schedule-scheme-xml.md` | Interactive schedule schemes: no API; writing the exported XML so Archicad imports it. |
 | `references/source-and-office-standard-checklist.md` | Source hierarchy, discovery questions, ask-vs-discover rules. |
 | `templates/` | Rebuild-plan and overlay-report templates. |
 
@@ -214,6 +215,13 @@ check each item for an `elementId` vs. an `error` object.
   A bare GUID string fails validation — and `DeleteElements` with the wrong shape returns
   `succeeded: true` while deleting **nothing**. Since 1.6.0 `DeleteElements` answers
   `executionResults[]` per element, but reports a nonexistent guid as deleted — always re-count.
+- **`UpdateZones` without `zones` updates the selection — or, with nothing selected, EVERY zone**
+  (observed: 26 zones on one story changed at once, stair cores with clearly wrong areas; only
+  closing without saving undid it). Since Tapir 2.0.0 pass `zones` (list of element IDs): every
+  zone is checked first, hidden/locked ones fail the whole call, and Archicad applies the update
+  right after the command returns — read the new geometry with a later call. On releases <= 1.8.x
+  there is no `zones` parameter: recalculating one zone means back up, delete, `CreateZones`
+  (see "Recreating a single zone" in `references/tapir-verified-command-schemas.md`).
 - **Identify each Archicad by `API.GetProductInfo` / `GetProjectInfo`, never by its port** — ports
   follow the start order and swap between sessions.
 - **Queries act on the active window** — `GetElementsByType` without `databases` lists the active
@@ -349,6 +357,18 @@ Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint 
   `details.typeSpecificDetails = {titleLibraryPartIndex: 0}` ("No title", titleElementId becomes
   null); `numberingType`/`customNumber` are settable the same way. Office style "title as layout
   text": remove the title and create the title text on the layout.
+- **Recipe "place a drawing on a layout"** (observed AC28, Tapir 1.8.1 dev build, one session):
+  1. `CreateDrawings` has no layer field — the drawing lands on the Drawing tool's default layer,
+     which cannot be queried. If that layer is hidden, the drawing is invisible and not editable.
+     Check with `GetLayers`; if needed show the layer (`CreateLayers` + `overwriteExisting`), set
+     `details.layerIndex`, hide it again in a `finally` block and read the layer state back.
+  2. Remove the title: `typeSpecificDetails.titleLibraryPartIndex: 0`.
+  3. `typeSpecificDetails.isScaleIncludedInAutotextAndIndex: false` — otherwise the drawing's scale
+     is appended to the title block's scale field ("1:100" becomes "1:100, 1:1").
+  4. `typeSpecificDetails.isInNumbering: false` if the sheet's drawings must not be numbered.
+  5. Move with `MoveElements` (reliable); `typeSpecificDetails.pos` returned success and left the
+     drawing where it was.
+  6. Check with `SaveCurrentWindowAsImage` of the layout.
 - Setting `pos` on an UNclipped drawing is accepted and ignored; clipped drawings move when `pos`
   and `clipPolygon` are shifted together. To "move" an unclipped drawing, delete and recreate it.
 - Drawings did not refresh after model/2D edits in AC26; delete and recreate the drawing at the same
@@ -399,6 +419,11 @@ Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint 
   layer during creation, set `details.layerIndex` to the target dimension layer (moving onto a
   hidden target layer works), hide it again. The same applies to probe dimensions — delete them
   while their layer is visible and check results.
+- **Multi-line texts**: on releases up to 2.0.0, `CreateTexts`/`ModifyTexts` fail
+  (-2130312696 "Failed to create new Text" / "Failed to modify the Text") when a line is longer
+  than the line after it — in practice with two or more line breaks. Fixed after 2.0.0 (#2461,
+  #2462); until then write one line break at most, or let the text box wrap a long line. Line breaks
+  are written as `\r` and read back as `\n` — compare texts with both forms.
 - **Texts**: in floor plans pass `floorIndex` to `CreateTexts` (without it the text lands on floor 0;
   `SetDetailsOfElements.floorIndex` on texts is ignored). Text angle = direction of the edge it
   labels; `flipEnabled` keeps it readable. Texts over cut fills (walls): raise `drawIndex`. A text
@@ -421,6 +446,17 @@ Sources: Graphisoft Help "About Details" and "Create a Detail Drawing Viewpoint 
    report values that changed (and design conflicts the new numbers reveal) instead of copying.
 
 ### Modelling details that affect documentation
+
+- **Graphic override rules beat the renovation display** (observed AC28): a rule that recolours
+  walls also recolours demolished and new walls. To keep the renovation look, restrict the rule's
+  criterion to the renovation status. The rules shipped with the template (renovation) cannot be
+  modified. Pen 0 (transparent) was refused on create with the misleading message "name must be
+  unique". An object's background fill did not follow any rule — set the GDL parameter
+  `gs_back_pen` instead.
+- `CreatePolylines` takes the line type only as an index; set it by its GUID afterwards with
+  `SetDetailsOfElements`.
+- `ModifyDoors` with a new `width` shifted the door along the wall (`centerOffset` changed) in one
+  observed case — send `centerOffset` with every width change and read it back.
 
 - Elements on hidden/locked layers cannot be moved, deleted or modified ("layer is hidden",
   "not editable"). Showing layers via `CreateLayers overwriteExisting` changes the user's current
